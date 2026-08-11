@@ -1,0 +1,1965 @@
+```html
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEON RUN</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    user-select:none;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#02040b;
+    font-family:Arial,sans-serif;
+}
+
+#game{
+    position:fixed;
+    inset:0;
+    overflow:hidden;
+    background:
+        radial-gradient(
+            ellipse at 50% 45%,
+            #101c35 0%,
+            #080d1b 45%,
+            #02040a 100%
+        );
+}
+
+/* TŁO */
+
+#space{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+    z-index:0;
+}
+
+#horizonGlow{
+    position:absolute;
+    left:50%;
+    top:43%;
+    width:90vw;
+    height:70vw;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:
+        radial-gradient(
+            circle,
+            rgba(0,210,240,.07),
+            rgba(50,80,180,.025) 40%,
+            transparent 70%
+        );
+    filter:blur(25px);
+}
+
+#tunnel{
+    position:absolute;
+    left:50%;
+    top:43%;
+    width:150vmax;
+    height:150vmax;
+    transform:
+        translate(-50%,-50%)
+        rotateX(68deg);
+    transform-style:preserve-3d;
+}
+
+.ring{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:100%;
+    height:100%;
+    border:1px solid rgba(70,190,220,.09);
+    border-radius:50%;
+    transform:
+        translate(-50%,-50%)
+        scale(.03);
+    animation:ringFly 5s linear infinite;
+}
+
+.ring:nth-child(2){animation-delay:-.6s}
+.ring:nth-child(3){animation-delay:-1.2s}
+.ring:nth-child(4){animation-delay:-1.8s}
+.ring:nth-child(5){animation-delay:-2.4s}
+.ring:nth-child(6){animation-delay:-3s}
+.ring:nth-child(7){animation-delay:-3.6s}
+.ring:nth-child(8){animation-delay:-4.2s}
+
+@keyframes ringFly{
+    0%{
+        transform:translate(-50%,-50%) scale(.03);
+        opacity:0;
+    }
+    20%{opacity:.25;}
+    100%{
+        transform:translate(-50%,-50%) scale(1.15);
+        opacity:0;
+    }
+}
+
+.tunnelLine{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:1px;
+    height:100%;
+    background:
+        linear-gradient(
+            transparent,
+            rgba(70,190,220,.06),
+            transparent
+        );
+}
+
+/* SIATKA */
+
+#gridFloor{
+    position:absolute;
+    left:-50%;
+    bottom:-55%;
+    width:200%;
+    height:110%;
+    transform:
+        perspective(520px)
+        rotateX(63deg);
+    transform-origin:center bottom;
+
+    background-image:
+        linear-gradient(
+            rgba(70,180,210,.055) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(70,180,210,.055) 1px,
+            transparent 1px
+        );
+
+    background-size:80px 80px;
+
+    animation:gridMove .65s linear infinite;
+
+    mask-image:
+        linear-gradient(
+            to top,
+            black,
+            transparent 82%
+        );
+}
+
+@keyframes gridMove{
+    from{background-position:0 0;}
+    to{background-position:0 80px;}
+}
+
+/* GWIAZDY */
+
+#stars{
+    position:absolute;
+    inset:0;
+}
+
+.star3d{
+    position:absolute;
+    left:50%;
+    top:43%;
+    width:2px;
+    height:2px;
+    border-radius:50%;
+    background:#d9f8ff;
+    box-shadow:0 0 5px rgba(100,220,255,.5);
+
+    transform:
+        translate(-50%,-50%)
+        rotate(var(--angle))
+        translateY(0);
+
+    animation:
+        starFly
+        var(--duration)
+        linear
+        infinite;
+}
+
+@keyframes starFly{
+    from{
+        opacity:.03;
+        transform:
+            translate(-50%,-50%)
+            rotate(var(--angle))
+            translateY(0)
+            scale(.2);
+    }
+
+    40%{opacity:.3;}
+
+    to{
+        opacity:0;
+        transform:
+            translate(-50%,-50%)
+            rotate(var(--angle))
+            translateY(var(--distance))
+            scale(2);
+    }
+}
+
+/* HUD */
+
+#hud{
+    position:absolute;
+    z-index:100;
+    top:0;
+    left:0;
+    right:0;
+    height:90px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:15px 25px;
+
+    background:
+        linear-gradient(
+            rgba(0,0,8,.7),
+            transparent
+        );
+}
+
+.stat{
+    min-width:95px;
+    text-align:center;
+}
+
+.label{
+    color:#69758c;
+    font-size:9px;
+    letter-spacing:3px;
+}
+
+.number{
+    margin-top:5px;
+    color:#57d8ee;
+    font-size:23px;
+    font-weight:bold;
+
+    text-shadow:
+        0 0 10px rgba(40,210,240,.6);
+}
+
+#highScore{
+    color:#e8c94c;
+}
+
+#shieldStatus{
+    margin-top:5px;
+    color:#69758c;
+    font-size:11px;
+    font-weight:bold;
+}
+
+#shieldStatus.active{
+    color:#00ffff;
+    text-shadow:0 0 10px #00ffff;
+}
+
+/* STATEK */
+
+#player{
+    position:absolute;
+    z-index:40;
+
+    left:50%;
+    bottom:105px;
+
+    width:70px;
+    height:72px;
+
+    transform:
+        translateX(-50%)
+        perspective(500px)
+        rotateX(8deg);
+
+    background:
+        linear-gradient(
+            150deg,
+            #ffffff,
+            #72e7f2 15%,
+            #168cd2 45%,
+            #183b8b 75%,
+            #0b1035
+        );
+
+    clip-path:
+        polygon(
+            50% 0%,
+            61% 25%,
+            100% 75%,
+            77% 74%,
+            67% 100%,
+            50% 82%,
+            33% 100%,
+            23% 74%,
+            0% 75%,
+            39% 25%
+        );
+
+    box-shadow:
+        0 0 10px rgba(0,220,255,.8),
+        0 0 25px rgba(0,100,255,.5);
+}
+
+#player::before{
+    content:"";
+    position:absolute;
+    left:27px;
+    top:15px;
+    width:17px;
+    height:24px;
+    border-radius:60%;
+
+    background:
+        linear-gradient(
+            #ffffff,
+            #aaffff 25%,
+            #168aff 70%,
+            #06154d
+        );
+
+    border:1px solid white;
+
+    box-shadow:
+        0 0 8px rgba(255,255,255,.8);
+}
+
+#player::after{
+    content:"";
+    position:absolute;
+    left:27px;
+    bottom:-35px;
+    width:17px;
+    height:40px;
+    border-radius:50%;
+
+    background:
+        linear-gradient(
+            #ffffff,
+            #00ffff 25%,
+            #0088ff 55%,
+            transparent
+        );
+
+    box-shadow:0 0 12px #00ffff;
+
+    animation:
+        engine .07s infinite alternate;
+}
+
+@keyframes engine{
+    from{height:25px;}
+    to{height:42px;}
+}
+
+/* TARCZA */
+
+#shield{
+    position:absolute;
+    z-index:39;
+
+    left:50%;
+    bottom:94px;
+
+    width:108px;
+    height:108px;
+
+    transform:translateX(-50%);
+
+    border:2px solid #00eaff;
+    border-radius:50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(0,255,255,.08),
+            transparent 70%
+        );
+
+    box-shadow:
+        0 0 15px rgba(0,230,255,.8),
+        inset 0 0 20px rgba(0,230,255,.4);
+
+    display:none;
+    pointer-events:none;
+
+    animation:
+        shieldPulse .7s infinite alternate;
+}
+
+#shield.active{
+    display:block;
+}
+
+@keyframes shieldPulse{
+    from{
+        transform:translateX(-50%) scale(.95);
+        opacity:.6;
+    }
+    to{
+        transform:translateX(-50%) scale(1.05);
+        opacity:1;
+    }
+}
+
+/* PRZESZKODY */
+
+.obstacle{
+    position:absolute;
+    z-index:30;
+    border-radius:7px;
+    transform:rotate(45deg);
+
+    box-shadow:
+        0 0 12px currentColor,
+        0 0 28px currentColor;
+}
+
+.obstacle::after{
+    content:"";
+    position:absolute;
+    inset:25%;
+    border-radius:50%;
+    background:white;
+    box-shadow:0 0 8px white;
+}
+
+/* BONUS */
+
+.bonus{
+    position:absolute;
+    z-index:31;
+
+    width:30px;
+    height:30px;
+
+    border-radius:6px;
+
+    transform:rotate(45deg);
+
+    animation:
+        bonusSpin .6s linear infinite;
+
+    box-shadow:
+        0 0 12px currentColor,
+        0 0 28px currentColor;
+}
+
+.bonus::after{
+    content:"+";
+    position:absolute;
+    left:50%;
+    top:50%;
+
+    transform:
+        translate(-50%,-50%)
+        rotate(-45deg);
+
+    color:white;
+    font-weight:bold;
+    font-size:18px;
+}
+
+@keyframes bonusSpin{
+    from{
+        transform:rotate(45deg) scale(.9);
+    }
+    50%{
+        transform:rotate(135deg) scale(1.12);
+    }
+    to{
+        transform:rotate(225deg) scale(.9);
+    }
+}
+
+/* TARCZA POWERUP */
+
+.shieldPower{
+    position:absolute;
+    z-index:32;
+
+    width:30px;
+    height:30px;
+
+    border-radius:50%;
+
+    border:2px solid #00ffff;
+
+    background:
+        radial-gradient(
+            circle,
+            #fff,
+            #00ffff 25%,
+            #1675d5 60%,
+            #001a66
+        );
+
+    box-shadow:
+        0 0 12px #00ffff,
+        0 0 25px #0066ff;
+
+    animation:
+        shieldPowerAnimation
+        .5s infinite alternate;
+}
+
+.shieldPower::after{
+    content:"🛡";
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    font-size:16px;
+}
+
+@keyframes shieldPowerAnimation{
+    from{transform:scale(.8);}
+    to{transform:scale(1.1);}
+}
+
+/* LEVEL */
+
+#levelMessage{
+    position:absolute;
+    z-index:150;
+
+    left:50%;
+    top:48%;
+
+    transform:translate(-50%,-50%);
+
+    color:white;
+
+    font-size:clamp(50px,11vw,110px);
+
+    font-weight:900;
+
+    letter-spacing:7px;
+
+    opacity:0;
+    pointer-events:none;
+
+    text-shadow:
+        0 0 15px rgba(0,220,255,.8),
+        0 0 40px rgba(0,100,255,.5);
+
+    transition:opacity .3s;
+}
+
+#levelMessage.show{
+    opacity:1;
+}
+
+/* START */
+
+#start{
+    position:absolute;
+    inset:0;
+
+    z-index:300;
+
+    display:flex;
+
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    text-align:center;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(15,25,70,.55),
+            rgba(0,0,5,.94)
+        );
+}
+
+#start h1{
+    color:#65dff0;
+
+    font-size:clamp(55px,13vw,130px);
+
+    line-height:.8;
+    letter-spacing:8px;
+
+    text-shadow:
+        0 0 15px rgba(0,220,255,.7),
+        0 0 40px rgba(0,120,255,.4);
+}
+
+#start h1 span{
+    display:block;
+    color:#dc55c6;
+
+    text-shadow:
+        0 0 15px rgba(220,60,200,.6);
+}
+
+#start p{
+    margin-top:28px;
+    color:#69758c;
+    font-size:11px;
+    letter-spacing:3px;
+}
+
+#startButton,
+#restartButton{
+    margin-top:35px;
+
+    padding:16px 55px;
+
+    border:1px solid #4fd4e8;
+    border-radius:8px;
+
+    background:
+        rgba(0,200,230,.06);
+
+    color:#62dff0;
+
+    font-size:14px;
+    font-weight:bold;
+    letter-spacing:4px;
+
+    cursor:pointer;
+}
+
+#startButton:hover,
+#restartButton:hover{
+    background:
+        rgba(0,220,240,.15);
+
+    box-shadow:
+        0 0 15px rgba(0,220,240,.4);
+}
+
+/* GAME OVER */
+
+#gameOver{
+    position:absolute;
+    inset:0;
+
+    z-index:300;
+
+    display:none;
+
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+
+    background:rgba(2,3,13,.96);
+
+    color:white;
+}
+
+#gameOver h2{
+    color:#ff4165;
+
+    font-size:clamp(45px,10vw,90px);
+
+    text-shadow:
+        0 0 20px rgba(255,20,70,.7);
+}
+
+.finalLabel{
+    margin-top:25px;
+    color:#69758c;
+    letter-spacing:4px;
+}
+
+#finalScore{
+    margin-top:10px;
+    color:#58dff0;
+    font-size:70px;
+    font-weight:bold;
+}
+
+#newRecord{
+    display:none;
+
+    margin-top:10px;
+
+    color:#e8ca4a;
+    font-weight:bold;
+    letter-spacing:3px;
+}
+
+/* MUZYKA */
+
+#musicButton{
+    position:absolute;
+
+    top:100px;
+    right:20px;
+
+    z-index:250;
+
+    width:45px;
+    height:45px;
+
+    border-radius:50%;
+
+    border:1px solid #55d8eb;
+
+    background:rgba(0,5,20,.8);
+
+    color:white;
+
+    font-size:18px;
+
+    cursor:pointer;
+}
+
+/* MOBILE */
+
+#mobileControls{
+    position:absolute;
+
+    z-index:250;
+
+    bottom:20px;
+
+    left:0;
+    right:0;
+
+    display:none;
+
+    justify-content:space-between;
+
+    padding:0 20px;
+}
+
+#mobileControls button{
+    width:80px;
+    height:60px;
+
+    border-radius:15px;
+
+    border:1px solid #4fd4e8;
+
+    background:rgba(0,20,40,.8);
+
+    color:#55dff0;
+
+    font-size:25px;
+}
+
+@media(max-width:700px){
+
+    #mobileControls{
+        display:flex;
+    }
+
+    #hud{
+        padding:10px;
+    }
+
+    .stat{
+        min-width:55px;
+    }
+
+    .label{
+        font-size:7px;
+        letter-spacing:1px;
+    }
+
+    .number{
+        font-size:18px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- MUZYKA -->
+<audio id="music" loop preload="auto">
+    <source src="./music.mp3" type="audio/mpeg">
+</audio>
+
+<div id="game">
+
+    <div id="space">
+
+        <div id="horizonGlow"></div>
+
+        <div id="tunnel">
+
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+
+            <div class="tunnelLine"
+                 style="transform:translate(-50%,-50%) rotate(0deg)"></div>
+
+            <div class="tunnelLine"
+                 style="transform:translate(-50%,-50%) rotate(30deg)"></div>
+
+            <div class="tunnelLine"
+                 style="transform:translate(-50%,-50%) rotate(60deg)"></div>
+
+            <div class="tunnelLine"
+                 style="transform:translate(-50%,-50%) rotate(90deg)"></div>
+
+            <div class="tunnelLine"
+                 style="transform:translate(-50%,-50%) rotate(120deg)"></div>
+
+            <div class="tunnelLine"
+                 style="transform:translate(-50%,-50%) rotate(150deg)"></div>
+
+        </div>
+
+        <div id="gridFloor"></div>
+        <div id="stars"></div>
+
+    </div>
+
+    <div id="hud">
+
+        <div class="stat">
+            <div class="label">WYNIK</div>
+            <div id="score" class="number">0</div>
+        </div>
+
+        <div class="stat">
+            <div class="label">HIGH SCORE</div>
+            <div id="highScore" class="number">0</div>
+        </div>
+
+        <div class="stat">
+            <div class="label">LEVEL</div>
+            <div id="level" class="number">1</div>
+        </div>
+
+        <div class="stat">
+            <div class="label">ŻYCIA</div>
+            <div id="lives" class="number">❤️❤️❤️</div>
+        </div>
+
+        <div class="stat">
+            <div class="label">TARCZA</div>
+            <div id="shieldStatus">BRAK</div>
+        </div>
+
+    </div>
+
+    <div id="shield"></div>
+    <div id="player"></div>
+
+    <div id="levelMessage">
+        LEVEL 1
+    </div>
+
+    <button id="musicButton">🔇</button>
+
+    <div id="start">
+
+        <h1>
+            NEON
+            <span>RUN</span>
+        </h1>
+
+        <p>
+            UNIKAJ • ZBIERAJ • PRZETRWAJ
+        </p>
+
+        <button id="startButton">
+            START
+        </button>
+
+        <p>
+            ← → &nbsp; lub &nbsp; A / D
+        </p>
+
+    </div>
+
+    <div id="gameOver">
+
+        <h2>KONIEC GRY</h2>
+
+        <div class="finalLabel">
+            TWÓJ WYNIK
+        </div>
+
+        <div id="finalScore">
+            0
+        </div>
+
+        <div id="newRecord">
+            🏆 NOWY HIGH SCORE!
+        </div>
+
+        <button id="restartButton">
+            ZAGRAJ PONOWNIE
+        </button>
+
+    </div>
+
+    <div id="mobileControls">
+
+        <button id="leftButton">◀</button>
+        <button id="rightButton">▶</button>
+
+    </div>
+
+</div>
+
+<script>
+
+/* ELEMENTY */
+
+const game = document.getElementById("game");
+const player = document.getElementById("player");
+const shield = document.getElementById("shield");
+
+const scoreElement = document.getElementById("score");
+const highScoreElement = document.getElementById("highScore");
+const levelElement = document.getElementById("level");
+const livesElement = document.getElementById("lives");
+const shieldStatus = document.getElementById("shieldStatus");
+
+const levelMessage = document.getElementById("levelMessage");
+
+const startScreen = document.getElementById("start");
+const gameOver = document.getElementById("gameOver");
+
+const startButton = document.getElementById("startButton");
+const restartButton = document.getElementById("restartButton");
+
+const finalScore = document.getElementById("finalScore");
+const newRecord = document.getElementById("newRecord");
+
+const music = document.getElementById("music");
+const musicButton = document.getElementById("musicButton");
+
+const leftButton = document.getElementById("leftButton");
+const rightButton = document.getElementById("rightButton");
+
+
+/* GWIAZDY */
+
+const starContainer = document.getElementById("stars");
+
+for(let i=0;i<80;i++){
+
+    const star = document.createElement("div");
+
+    star.className = "star3d";
+
+    star.style.setProperty(
+        "--angle",
+        Math.random()*360+"deg"
+    );
+
+    star.style.setProperty(
+        "--distance",
+        50 + Math.random()*750 + "px"
+    );
+
+    star.style.setProperty(
+        "--duration",
+        2 + Math.random()*4 + "s"
+    );
+
+    star.style.animationDelay =
+        -Math.random()*5 + "s";
+
+    starContainer.appendChild(star);
+}
+
+
+/* HIGH SCORE */
+
+let highScore =
+    Number(localStorage.getItem("neonRunHighScore")) || 0;
+
+highScoreElement.textContent = highScore;
+
+
+/* ŚWIATY */
+
+const worlds = [
+
+    {
+        background:
+            "radial-gradient(ellipse at 50% 45%,#101d37,#080d1b 48%,#02040a)",
+        player:"#43d9ed",
+        obstacle:"#ff4160",
+        bonus:"#df55ce"
+    },
+
+    {
+        background:
+            "radial-gradient(ellipse at 50% 45%,#10303a,#07151d 48%,#020508)",
+        player:"#53e0e0",
+        obstacle:"#ff7043",
+        bonus:"#39b8ee"
+    },
+
+    {
+        background:
+            "radial-gradient(ellipse at 50% 45%,#1b3218,#09150a 48%,#020503)",
+        player:"#92df45",
+        obstacle:"#ff4d4d",
+        bonus:"#d8e94e"
+    },
+
+    {
+        background:
+            "radial-gradient(ellipse at 50% 45%,#32153b,#12071a 48%,#030106)",
+        player:"#e466d7",
+        obstacle:"#ff8a44",
+        bonus:"#52d6ed"
+    }
+
+];
+
+
+/* ZMIENNE */
+
+let playing = false;
+
+let score = 0;
+let lives = 3;
+let level = 1;
+
+let gameTime = 0;
+let lastTime = 0;
+
+let obstacleTimer = 0;
+let bonusTimer = 0;
+let shieldTimer = 0;
+
+let playerX = 0;
+
+let moveLeft = false;
+let moveRight = false;
+
+const PLAYER_SPEED = 950;
+
+let hasShield = false;
+
+let obstacles = [];
+let bonuses = [];
+let shieldPowers = [];
+
+
+/* START */
+
+function startGame(){
+
+    playing = true;
+
+    score = 0;
+    lives = 3;
+    level = 1;
+
+    gameTime = 0;
+
+    obstacleTimer = 0;
+    bonusTimer = 0;
+    shieldTimer = 0;
+
+    moveLeft = false;
+    moveRight = false;
+
+    hasShield = false;
+
+    playerX = window.innerWidth / 2;
+
+    obstacles = [];
+    bonuses = [];
+    shieldPowers = [];
+
+    document
+        .querySelectorAll(".obstacle,.bonus,.shieldPower")
+        .forEach(element => element.remove());
+
+    shield.classList.remove("active");
+
+    shieldStatus.textContent = "BRAK";
+    shieldStatus.classList.remove("active");
+
+    startScreen.style.display = "none";
+    gameOver.style.display = "none";
+    newRecord.style.display = "none";
+
+    changeWorld();
+    updateHUD();
+
+    /* MUZYKA */
+
+    music.volume = 0.3;
+
+    music.currentTime = 0;
+
+    music.play()
+        .then(() => {
+            musicButton.textContent = "🔊";
+        })
+        .catch(() => {
+            musicButton.textContent = "🔇";
+        });
+
+    lastTime = performance.now();
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+/* GAME LOOP */
+
+function gameLoop(time){
+
+    if(!playing) return;
+
+    let delta =
+        (time-lastTime)/1000;
+
+    if(delta > 0.05){
+        delta = 0.05;
+    }
+
+    lastTime = time;
+
+    update(delta);
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+/* RUCH */
+
+function updatePlayer(delta){
+
+    let direction = 0;
+
+    if(moveLeft) direction -= 1;
+    if(moveRight) direction += 1;
+
+    playerX +=
+        direction *
+        PLAYER_SPEED *
+        delta;
+
+    const halfWidth =
+        player.offsetWidth / 2;
+
+    if(playerX < halfWidth){
+        playerX = halfWidth;
+    }
+
+    if(playerX >
+       window.innerWidth-halfWidth){
+
+        playerX =
+            window.innerWidth-halfWidth;
+    }
+
+    player.style.left =
+        playerX + "px";
+
+    shield.style.left =
+        playerX + "px";
+}
+
+
+/* UPDATE */
+
+function update(delta){
+
+    gameTime += delta;
+
+    const newLevel =
+        Math.floor(gameTime/20)+1;
+
+    if(newLevel > level){
+
+        level = newLevel;
+
+        changeWorld();
+        showLevel();
+    }
+
+    updatePlayer(delta);
+
+    const speed =
+        350 + (level-1)*80;
+
+    /* PRZESZKODY */
+
+    obstacleTimer += delta;
+
+    const obstacleDelay =
+        Math.max(
+            0.14,
+            0.48-(level-1)*0.035
+        );
+
+    if(obstacleTimer >= obstacleDelay){
+
+        createObstacle();
+
+        obstacleTimer = 0;
+
+        if(
+            Math.random() <
+            Math.min(
+                0.5,
+                0.12+level*0.025
+            )
+        ){
+
+            setTimeout(() => {
+
+                if(playing){
+                    createObstacle();
+                }
+
+            },70);
+        }
+    }
+
+    /* BONUSY */
+
+    bonusTimer += delta;
+
+    if(
+        bonusTimer >=
+        Math.max(
+            0.5,
+            1.2-(level-1)*0.035
+        )
+    ){
+
+        createBonus();
+
+        bonusTimer = 0;
+    }
+
+    /* TARCZE */
+
+    shieldTimer += delta;
+
+    if(shieldTimer >= 9){
+
+        createShieldPower();
+
+        shieldTimer = 0;
+    }
+
+    /* PRZESZKODY */
+
+    for(
+        let i=obstacles.length-1;
+        i>=0;
+        i--
+    ){
+
+        const o = obstacles[i];
+
+        o.y += speed*delta;
+
+        o.element.style.top =
+            o.y+"px";
+
+        if(collision(o.element)){
+
+            o.element.remove();
+
+            obstacles.splice(i,1);
+
+            if(hasShield){
+
+                removeShield();
+
+                showPopup(
+                    "🛡 TARCZA!",
+                    true
+                );
+
+            }else{
+
+                loseLife();
+            }
+
+            continue;
+        }
+
+        if(
+            o.y >
+            window.innerHeight+100
+        ){
+
+            o.element.remove();
+
+            obstacles.splice(i,1);
+
+            score += 5;
+        }
+    }
+
+    /* BONUSY */
+
+    for(
+        let i=bonuses.length-1;
+        i>=0;
+        i--
+    ){
+
+        const b = bonuses[i];
+
+        b.y += speed*0.72*delta;
+
+        b.element.style.top =
+            b.y+"px";
+
+        if(collision(b.element)){
+
+            b.element.remove();
+
+            bonuses.splice(i,1);
+
+            score += 100;
+
+            showPopup("+100",false);
+
+            continue;
+        }
+
+        if(
+            b.y >
+            window.innerHeight+100
+        ){
+
+            b.element.remove();
+
+            bonuses.splice(i,1);
+        }
+    }
+
+    /* TARCZE */
+
+    for(
+        let i=shieldPowers.length-1;
+        i>=0;
+        i--
+    ){
+
+        const s = shieldPowers[i];
+
+        s.y += speed*1.35*delta;
+
+        s.element.style.top =
+            s.y+"px";
+
+        if(collision(s.element)){
+
+            s.element.remove();
+
+            shieldPowers.splice(i,1);
+
+            activateShield();
+
+            continue;
+        }
+
+        if(
+            s.y >
+            window.innerHeight+100
+        ){
+
+            s.element.remove();
+
+            shieldPowers.splice(i,1);
+        }
+    }
+
+    score += delta*(2+level);
+
+    updateHUD();
+}
+
+
+/* PRZESZKODA */
+
+function createObstacle(){
+
+    const element =
+        document.createElement("div");
+
+    element.className = "obstacle";
+
+    const size =
+        28+Math.random()*25;
+
+    element.style.width = size+"px";
+    element.style.height = size+"px";
+
+    element.style.left =
+        (3+Math.random()*94)+"%";
+
+    element.style.top = "-70px";
+
+    const world =
+        worlds[(level-1)%worlds.length];
+
+    element.style.background =
+        world.obstacle;
+
+    element.style.color =
+        world.obstacle;
+
+    game.appendChild(element);
+
+    obstacles.push({
+        element:element,
+        y:-70
+    });
+}
+
+
+/* BONUS */
+
+function createBonus(){
+
+    const element =
+        document.createElement("div");
+
+    element.className = "bonus";
+
+    element.style.left =
+        (5+Math.random()*90)+"%";
+
+    element.style.top = "-50px";
+
+    const world =
+        worlds[(level-1)%worlds.length];
+
+    element.style.background =
+        world.bonus;
+
+    element.style.color =
+        world.bonus;
+
+    game.appendChild(element);
+
+    bonuses.push({
+        element:element,
+        y:-50
+    });
+}
+
+
+/* POWERUP */
+
+function createShieldPower(){
+
+    const element =
+        document.createElement("div");
+
+    element.className =
+        "shieldPower";
+
+    element.style.left =
+        (7+Math.random()*86)+"%";
+
+    element.style.top = "-60px";
+
+    game.appendChild(element);
+
+    shieldPowers.push({
+        element:element,
+        y:-60
+    });
+}
+
+
+/* KOLIZJA */
+
+function collision(element){
+
+    const a =
+        element.getBoundingClientRect();
+
+    const b =
+        player.getBoundingClientRect();
+
+    const padding = 9;
+
+    return !(
+        a.right < b.left+padding ||
+        a.left > b.right-padding ||
+        a.bottom < b.top+padding ||
+        a.top > b.bottom-padding
+    );
+}
+
+
+/* TARCZA */
+
+function activateShield(){
+
+    hasShield = true;
+
+    shield.classList.add("active");
+
+    shieldStatus.textContent =
+        "AKTYWNA";
+
+    shieldStatus.classList.add("active");
+
+    showPopup(
+        "🛡 TARCZA!",
+        true
+    );
+}
+
+function removeShield(){
+
+    hasShield = false;
+
+    shield.classList.remove("active");
+
+    shieldStatus.textContent =
+        "BRAK";
+
+    shieldStatus.classList.remove("active");
+}
+
+
+/* ŻYCIE */
+
+function loseLife(){
+
+    lives--;
+
+    updateHUD();
+
+    player.style.filter =
+        "brightness(4)";
+
+    setTimeout(() => {
+
+        player.style.filter =
+            "none";
+
+    },180);
+
+    if(lives <= 0){
+        endGame();
+    }
+}
+
+
+/* HUD */
+
+function updateHUD(){
+
+    scoreElement.textContent =
+        Math.floor(score);
+
+    highScoreElement.textContent =
+        highScore;
+
+    levelElement.textContent =
+        level;
+
+    if(lives===3){
+        livesElement.textContent =
+            "❤️❤️❤️";
+    }else if(lives===2){
+        livesElement.textContent =
+            "❤️❤️🖤";
+    }else if(lives===1){
+        livesElement.textContent =
+            "❤️🖤🖤";
+    }else{
+        livesElement.textContent =
+            "🖤🖤🖤";
+    }
+}
+
+
+/* ŚWIAT */
+
+function changeWorld(){
+
+    const world =
+        worlds[(level-1)%worlds.length];
+
+    game.style.background =
+        world.background;
+
+    player.style.background =
+        `
+        linear-gradient(
+            150deg,
+            #ffffff,
+            ${world.player},
+            #17234e
+        )
+        `;
+
+    player.style.boxShadow =
+        `
+        0 0 10px ${world.player},
+        0 0 25px ${world.player}
+        `;
+}
+
+
+/* LEVEL */
+
+function showLevel(){
+
+    levelMessage.textContent =
+        "LEVEL "+level;
+
+    levelMessage.classList.add("show");
+
+    setTimeout(() => {
+
+        levelMessage.classList.remove("show");
+
+    },2200);
+}
+
+
+/* POPUP */
+
+function showPopup(text,shieldText){
+
+    const popup =
+        document.createElement("div");
+
+    popup.style.position = "fixed";
+    popup.style.zIndex = "500";
+
+    popup.style.color =
+        shieldText
+        ? "#00ffff"
+        : "#ff55dd";
+
+    popup.style.fontSize = "22px";
+    popup.style.fontWeight = "bold";
+
+    popup.style.textShadow =
+        "0 0 15px currentColor";
+
+    popup.style.pointerEvents =
+        "none";
+
+    popup.textContent = text;
+
+    const rect =
+        player.getBoundingClientRect();
+
+    popup.style.left =
+        rect.left+"px";
+
+    popup.style.top =
+        rect.top+"px";
+
+    document.body.appendChild(popup);
+
+    popup.animate(
+        [
+            {
+                transform:"translateY(0)",
+                opacity:1
+            },
+            {
+                transform:"translateY(-70px)",
+                opacity:0
+            }
+        ],
+        {
+            duration:800,
+            easing:"ease-out"
+        }
+    );
+
+    setTimeout(
+        () => popup.remove(),
+        800
+    );
+}
+
+
+/* GAME OVER */
+
+function endGame(){
+
+    playing = false;
+
+    moveLeft = false;
+    moveRight = false;
+
+    finalScore.textContent =
+        Math.floor(score);
+
+    if(
+        Math.floor(score) >
+        highScore
+    ){
+
+        highScore =
+            Math.floor(score);
+
+        localStorage.setItem(
+            "neonRunHighScore",
+            highScore
+        );
+
+        newRecord.style.display =
+            "block";
+    }
+
+    highScoreElement.textContent =
+        highScore;
+
+    gameOver.style.display =
+        "flex";
+
+    music.pause();
+
+    musicButton.textContent =
+        "🔇";
+}
+
+
+/* KLAWIATURA */
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(
+            event.key==="ArrowLeft" ||
+            event.key.toLowerCase()==="a"
+        ){
+
+            moveLeft = true;
+
+            event.preventDefault();
+        }
+
+        if(
+            event.key==="ArrowRight" ||
+            event.key.toLowerCase()==="d"
+        ){
+
+            moveRight = true;
+
+            event.preventDefault();
+        }
+    }
+);
+
+document.addEventListener(
+    "keyup",
+    function(event){
+
+        if(
+            event.key==="ArrowLeft" ||
+            event.key.toLowerCase()==="a"
+        ){
+
+            moveLeft = false;
+        }
+
+        if(
+            event.key==="ArrowRight" ||
+            event.key.toLowerCase()==="d"
+        ){
+
+            moveRight = false;
+        }
+    }
+);
+
+window.addEventListener(
+    "blur",
+    function(){
+
+        moveLeft = false;
+        moveRight = false;
+    }
+);
+
+
+/* TELEFON */
+
+function pressLeft(event){
+    event.preventDefault();
+    moveLeft = true;
+}
+
+function releaseLeft(event){
+    event.preventDefault();
+    moveLeft = false;
+}
+
+function pressRight(event){
+    event.preventDefault();
+    moveRight = true;
+}
+
+function releaseRight(event){
+    event.preventDefault();
+    moveRight = false;
+}
+
+leftButton.addEventListener(
+    "pointerdown",
+    pressLeft
+);
+
+leftButton.addEventListener(
+    "pointerup",
+    releaseLeft
+);
+
+leftButton.addEventListener(
+    "pointercancel",
+    releaseLeft
+);
+
+leftButton.addEventListener(
+    "pointerleave",
+    releaseLeft
+);
+
+rightButton.addEventListener(
+    "pointerdown",
+    pressRight
+);
+
+rightButton.addEventListener(
+    "pointerup",
+    releaseRight
+);
+
+rightButton.addEventListener(
+    "pointercancel",
+    releaseRight
+);
+
+rightButton.addEventListener(
+    "pointerleave",
+    releaseRight
+);
+
+
+/* MUZYKA */
+
+musicButton.addEventListener(
+    "click",
+    function(){
+
+        if(music.paused){
+
+            music.play()
+                .then(() => {
+
+                    musicButton.textContent =
+                        "🔊";
+
+                })
+                .catch(() => {
+
+                    musicButton.textContent =
+                        "🔇";
+
+                });
+
+        }else{
+
+            music.pause();
+
+            musicButton.textContent =
+                "🔇";
+        }
+    }
+);
+
+
+/* START / RESTART */
+
+startButton.addEventListener(
+    "click",
+    startGame
+);
+
+restartButton.addEventListener(
+    "click",
+    startGame
+);
+
+
+/* RESIZE */
+
+window.addEventListener(
+    "resize",
+    function(){
+
+        const halfWidth =
+            player.offsetWidth/2;
+
+        if(playerX < halfWidth){
+            playerX = halfWidth;
+        }
+
+        if(
+            playerX >
+            window.innerWidth-halfWidth
+        ){
+
+            playerX =
+                window.innerWidth-halfWidth;
+        }
+
+        player.style.left =
+            playerX+"px";
+
+        shield.style.left =
+            playerX+"px";
+    }
+);
+
+
+/* POCZĄTEK */
+
+updateHUD();
+
+</script>
+
+</body>
+</html>
+```

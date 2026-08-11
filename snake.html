@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Snake</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+    min-height:100vh;
+    background:#07100d;
+    color:white;
+    font-family:Arial,sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+}
+
+#app{
+    width:min(90vw,430px);
+    text-align:center;
+}
+
+h1{
+    color:#55ff9c;
+    font-size:34px;
+    letter-spacing:5px;
+    text-shadow:0 0 12px #16d66d;
+    margin-bottom:12px;
+}
+
+#menu{
+    background:#0c1914;
+    border:1px solid #214b39;
+    border-radius:12px;
+    padding:16px;
+}
+
+.setting{
+    margin-bottom:16px;
+    text-align:left;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:7px;
+}
+
+.name{
+    color:#9eb3a8;
+    font-size:9px;
+    letter-spacing:1.5px;
+}
+
+.value{
+    color:#55ff9c;
+    font-size:10px;
+    font-weight:bold;
+}
+
+input[type=range]{
+    width:100%;
+    height:5px;
+    appearance:none;
+    -webkit-appearance:none;
+    background:#1a3027;
+    border-radius:10px;
+}
+
+input[type=range]::-webkit-slider-thumb{
+    appearance:none;
+    width:17px;
+    height:17px;
+    border-radius:50%;
+    background:#55ff9c;
+    box-shadow:0 0 8px #55ff9c;
+}
+
+#start{
+    width:100%;
+    padding:11px;
+    border:0;
+    border-radius:7px;
+    background:#55ff9c;
+    color:#031008;
+    font-size:10px;
+    font-weight:bold;
+    letter-spacing:2px;
+    cursor:pointer;
+}
+
+#game{
+    display:none;
+}
+
+#hud{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:7px;
+}
+
+.stat{
+    flex:1;
+}
+
+.label{
+    color:#60736b;
+    font-size:7px;
+    letter-spacing:1.5px;
+}
+
+.number{
+    color:#55ff9c;
+    font-size:15px;
+    font-weight:bold;
+    margin-top:2px;
+}
+
+#board{
+    width:min(82vw,400px);
+    aspect-ratio:1;
+    margin:auto;
+    display:grid;
+    background:#08120e;
+    border:2px solid #55ff9c;
+    box-shadow:0 0 18px rgba(85,255,156,.16);
+}
+
+.cell{
+    position:relative;
+}
+
+.snake{
+    background:#31d879;
+    border-radius:2px;
+}
+
+.head{
+    background:#74ffb0;
+    border-radius:4px;
+    box-shadow:0 0 7px #55ff9c;
+}
+
+.apple{
+    background:#ed263f;
+    border-radius:50%;
+    transform:scale(.7);
+    box-shadow:0 0 8px #ff294b;
+}
+
+.apple:before{
+    content:"";
+    position:absolute;
+    width:5px;
+    height:3px;
+    background:#58e77a;
+    right:2px;
+    top:-2px;
+    border-radius:50%;
+    transform:rotate(-25deg);
+}
+
+#overlay{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,8,5,.88);
+}
+
+.box{
+    width:min(85vw,320px);
+    background:#0c1914;
+    border:1px solid #55ff9c;
+    border-radius:12px;
+    padding:25px;
+    text-align:center;
+}
+
+.box h2{
+    color:#55ff9c;
+    font-size:28px;
+}
+
+.box p{
+    color:#84978e;
+    margin-top:8px;
+    font-size:12px;
+}
+
+.buttons{
+    display:flex;
+    gap:7px;
+    margin-top:18px;
+}
+
+.buttons button{
+    flex:1;
+    padding:9px;
+    border:1px solid #55ff9c;
+    border-radius:6px;
+    background:transparent;
+    color:#55ff9c;
+    cursor:pointer;
+    font-size:9px;
+    font-weight:bold;
+}
+
+#controls{
+    display:none;
+    grid-template-columns:45px 45px 45px;
+    grid-template-rows:45px 45px;
+    justify-content:center;
+    gap:4px;
+    margin-top:10px;
+}
+
+.control{
+    border:1px solid #55ff9c;
+    background:#0c1914;
+    color:#55ff9c;
+    border-radius:7px;
+    font-size:16px;
+}
+
+.up{grid-column:2}
+.left{grid-column:1;grid-row:2}
+.down{grid-column:2;grid-row:2}
+.right{grid-column:3;grid-row:2}
+
+@media(max-width:600px){
+    #controls{display:grid}
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="app">
+
+<h1>SNAKE</h1>
+
+<div id="menu">
+
+<div class="setting">
+<div class="row">
+<span class="name">TRUDNOŚĆ</span>
+<span id="difficultyValue" class="value">NORMALNA</span>
+</div>
+
+<input id="difficulty"
+type="range"
+min="1"
+max="5"
+value="3">
+
+</div>
+
+<div class="setting">
+<div class="row">
+<span class="name">WIELKOŚĆ PLANSZY</span>
+<span id="sizeValue" class="value">20 × 20</span>
+</div>
+
+<input id="size"
+type="range"
+min="10"
+max="30"
+value="20">
+
+</div>
+
+<button id="start">START</button>
+
+</div>
+
+<div id="game">
+
+<div id="hud">
+
+<div class="stat">
+<div class="label">WYNIK</div>
+<div id="score" class="number">0</div>
+</div>
+
+<div class="stat">
+<div class="label">REKORD</div>
+<div id="highscore" class="number">0</div>
+</div>
+
+<div class="stat">
+<div class="label">PRĘDKOŚĆ</div>
+<div id="speed" class="number">3</div>
+</div>
+
+</div>
+
+<div id="board"></div>
+
+<div id="controls">
+
+<button class="control up" data-direction="up">▲</button> <button class="control left" data-direction="left">◀</button> <button class="control down" data-direction="down">▼</button> <button class="control right" data-direction="right">▶</button>
+
+</div>
+
+</div>
+</div>
+
+<div id="overlay">
+
+<div class="box">
+
+<h2 id="gameOverTitle">KONIEC</h2>
+
+<p id="result">Wynik: 0</p>
+
+<div class="buttons">
+<button id="again">JESZCZE RAZ</button>
+<button id="back">MENU</button>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const menu=document.getElementById("menu");
+const game=document.getElementById("game");
+const board=document.getElementById("board");
+const start=document.getElementById("start");
+
+const difficulty=document.getElementById("difficulty");
+const size=document.getElementById("size");
+
+const difficultyValue=document.getElementById("difficultyValue");
+const sizeValue=document.getElementById("sizeValue");
+
+const scoreText=document.getElementById("score");
+const highscoreText=document.getElementById("highscore");
+const speedText=document.getElementById("speed");
+
+const overlay=document.getElementById("overlay");
+const result=document.getElementById("result");
+const again=document.getElementById("again");
+const back=document.getElementById("back");
+const gameOverTitle=document.getElementById("gameOverTitle");
+
+const difficultyNames=[
+"",
+"BARDZO ŁATWA",
+"ŁATWA",
+"NORMALNA",
+"TRUDNA",
+"EKSTREMALNA"
+];
+
+function updateSettings(){
+
+difficultyValue.textContent=
+difficultyNames[Number(difficulty.value)];
+
+sizeValue.textContent=
+size.value+" × "+size.value;
+
+}
+
+difficulty.addEventListener("input",updateSettings);
+size.addEventListener("input",updateSettings);
+
+updateSettings();
+
+
+let gridSize=20;
+let snake=[];
+let apple={x:0,y:0};
+
+let direction={x:1,y:0};
+let nextDirection={x:1,y:0};
+
+let timer=null;
+let running=false;
+let score=0;
+
+let highscore=
+Number(localStorage.getItem("snakeRecord")||0);
+
+highscoreText.textContent=highscore;
+
+
+function getSpeed(){
+
+const speeds={
+1:180,
+2:145,
+3:110,
+4:80,
+5:55
+};
+
+return speeds[Number(difficulty.value)];
+
+}
+
+
+function startGame(){
+
+gridSize=Number(size.value);
+
+score=0;
+
+direction={x:1,y:0};
+nextDirection={x:1,y:0};
+
+const middle=Math.floor(gridSize/2);
+
+snake=[
+{x:middle,y:middle},
+{x:middle-1,y:middle},
+{x:middle-2,y:middle}
+];
+
+running=true;
+
+menu.style.display="none";
+game.style.display="block";
+overlay.style.display="none";
+
+createBoard();
+createApple();
+draw();
+updateHUD();
+
+clearInterval(timer);
+
+timer=setInterval(move,getSpeed());
+
+}
+
+
+start.onclick=startGame;
+again.onclick=startGame;
+
+
+function createBoard(){
+
+board.innerHTML="";
+
+board.style.gridTemplateColumns=
+`repeat(${gridSize},1fr)`;
+
+board.style.gridTemplateRows=
+`repeat(${gridSize},1fr)`;
+
+for(let i=0;i<gridSize*gridSize;i++){
+
+const cell=document.createElement("div");
+
+cell.className="cell";
+
+board.appendChild(cell);
+
+}
+
+}
+
+
+function createApple(){
+
+do{
+
+apple.x=
+Math.floor(Math.random()*gridSize);
+
+apple.y=
+Math.floor(Math.random()*gridSize);
+
+}
+while(
+snake.some(
+part=>
+part.x===apple.x &&
+part.y===apple.y
+)
+);
+
+}
+
+
+function move(){
+
+if(!running)return;
+
+direction={...nextDirection};
+
+const head={
+x:snake[0].x+direction.x,
+y:snake[0].y+direction.y
+};
+
+if(
+head.x<0 ||
+head.x>=gridSize ||
+head.y<0 ||
+head.y>=gridSize
+){
+
+gameOver();
+return;
+
+}
+
+const ate=
+head.x===apple.x &&
+head.y===apple.y;
+
+const body=
+ate ? snake : snake.slice(0,-1);
+
+if(
+body.some(
+part=>
+part.x===head.x &&
+part.y===head.y
+)
+){
+
+gameOver();
+return;
+
+}
+
+snake.unshift(head);
+
+if(ate){
+
+score+=1;
+createApple();
+
+}else{
+
+snake.pop();
+
+}
+
+draw();
+updateHUD();
+
+}
+
+
+function draw(){
+
+const cells=board.children;
+
+for(let i=0;i<cells.length;i++){
+cells[i].className="cell";
+}
+
+const appleIndex=
+apple.y*gridSize+apple.x;
+
+cells[appleIndex].classList.add("apple");
+
+snake.forEach((part,index)=>{
+
+const indexCell=
+part.y*gridSize+part.x;
+
+const cell=cells[indexCell];
+
+if(!cell)return;
+
+cell.classList.add("snake");
+
+if(index===0){
+cell.classList.add("head");
+}
+
+});
+
+}
+
+
+function updateHUD(){
+
+scoreText.textContent=score;
+highscoreText.textContent=highscore;
+speedText.textContent=difficulty.value;
+
+}
+
+
+function gameOver(){
+
+running=false;
+
+clearInterval(timer);
+
+if(score>highscore){
+
+highscore=score;
+
+localStorage.setItem(
+"snakeRecord",
+highscore
+);
+
+gameOverTitle.textContent="NOWY REKORD!";
+
+}else{
+
+gameOverTitle.textContent="KONIEC";
+
+}
+
+result.textContent=
+"Wynik: "+score+
+" • Rekord: "+highscore;
+
+highscoreText.textContent=highscore;
+
+overlay.style.display="flex";
+
+}
+
+
+function changeDirection(x,y){
+
+if(
+x===-direction.x &&
+y===-direction.y
+)return;
+
+nextDirection={x:x,y:y};
+
+}
+
+
+document.addEventListener("keydown",event=>{
+
+const key=event.key.toLowerCase();
+
+if(key==="arrowup"||key==="w")
+changeDirection(0,-1);
+
+if(key==="arrowdown"||key==="s")
+changeDirection(0,1);
+
+if(key==="arrowleft"||key==="a")
+changeDirection(-1,0);
+
+if(key==="arrowright"||key==="d")
+changeDirection(1,0);
+
+});
+
+
+document.querySelectorAll(".control")
+.forEach(button=>{
+
+button.addEventListener("click",()=>{
+
+const d=button.dataset.direction;
+
+if(d==="up")changeDirection(0,-1);
+if(d==="down")changeDirection(0,1);
+if(d==="left")changeDirection(-1,0);
+if(d==="right")changeDirection(1,0);
+
+});
+
+});
+
+
+back.onclick=()=>{
+
+running=false;
+
+clearInterval(timer);
+
+overlay.style.display="none";
+game.style.display="none";
+menu.style.display="block";
+
+};
+
+</script>
+
+</body>
+</html>

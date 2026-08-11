@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEON GAMES</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    user-select:none;
+}
+
+html,body{
+    width:100%;
+    min-height:100%;
+    background:#02040b;
+    font-family:Arial,sans-serif;
+    color:white;
+}
+
+body{
+    overflow-x:hidden;
+}
+
+/* =========================
+   TŁO
+========================= */
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:-2;
+
+    background:
+        radial-gradient(
+            circle at 50% 35%,
+            rgba(0,210,255,.10),
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at 20% 80%,
+            rgba(180,40,255,.07),
+            transparent 35%
+        ),
+        #02040b;
+}
+
+body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:-1;
+
+    background-image:
+        linear-gradient(
+            rgba(70,180,210,.025) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(70,180,210,.025) 1px,
+            transparent 1px
+        );
+
+    background-size:60px 60px;
+
+    mask-image:
+        linear-gradient(
+            to bottom,
+            black,
+            transparent 85%
+        );
+}
+
+/* =========================
+   MENU
+========================= */
+
+#menu{
+    width:100%;
+    min-height:100vh;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+
+    padding:45px 20px 35px;
+}
+
+/* =========================
+   LOGO
+========================= */
+
+.logo{
+    text-align:center;
+    margin-bottom:10px;
+}
+
+.logo h1{
+    font-size:clamp(48px,10vw,90px);
+    line-height:.85;
+    letter-spacing:8px;
+
+    color:#59dff0;
+
+    text-shadow:
+        0 0 10px rgba(0,220,255,.8),
+        0 0 30px rgba(0,180,255,.45);
+}
+
+.logo h1 span{
+    display:block;
+    color:#dc55c6;
+
+    text-shadow:
+        0 0 12px rgba(220,60,200,.8),
+        0 0 35px rgba(220,60,200,.35);
+}
+
+.subtitle{
+    margin-top:20px;
+
+    color:#66758c;
+
+    font-size:10px;
+    letter-spacing:4px;
+}
+
+/* =========================
+   GRY
+========================= */
+
+.games{
+    width:min(100%,850px);
+
+    display:grid;
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+
+    gap:15px;
+
+    margin-top:45px;
+}
+
+.game-card{
+    position:relative;
+
+    min-height:145px;
+
+    padding:22px;
+
+    border:1px solid rgba(75,210,235,.28);
+    border-radius:14px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(8,25,45,.9),
+            rgba(3,8,20,.92)
+        );
+
+    overflow:hidden;
+
+    cursor:pointer;
+
+    transition:
+        transform .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease;
+}
+
+.game-card::before{
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(0,220,255,.06),
+            transparent 45%
+        );
+
+    pointer-events:none;
+}
+
+.game-card:hover{
+    transform:translateY(-4px);
+
+    border-color:#55dff0;
+
+    box-shadow:
+        0 0 15px rgba(0,220,255,.18),
+        0 0 35px rgba(0,120,255,.08);
+}
+
+.game-number{
+    position:absolute;
+
+    top:15px;
+    right:18px;
+
+    color:#34455c;
+
+    font-size:11px;
+    letter-spacing:2px;
+}
+
+.game-icon{
+    width:48px;
+    height:48px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:12px;
+
+    margin-bottom:18px;
+
+    border:1px solid rgba(80,220,240,.4);
+
+    background:
+        rgba(0,210,240,.07);
+
+    color:#5be0ef;
+
+    font-size:24px;
+
+    box-shadow:
+        0 0 15px rgba(0,220,255,.08);
+}
+
+.game-card h2{
+    color:#e8faff;
+
+    font-size:20px;
+
+    letter-spacing:2px;
+
+    text-shadow:
+        0 0 10px rgba(0,220,255,.2);
+}
+
+.game-card p{
+    margin-top:7px;
+
+    color:#68778e;
+
+    font-size:10px;
+
+    letter-spacing:1.5px;
+}
+
+/* =========================
+   NOWA GRA
+========================= */
+
+.game-card.new{
+    border-color:rgba(220,85,210,.38);
+}
+
+.game-card.new:hover{
+    border-color:#e05bd2;
+
+    box-shadow:
+        0 0 18px rgba(220,70,210,.2),
+        0 0 35px rgba(150,40,255,.1);
+}
+
+.game-card.new .game-icon{
+    color:#e866d8;
+
+    border-color:rgba(230,90,215,.45);
+
+    background:
+        rgba(220,60,200,.08);
+}
+
+.new-label{
+    position:absolute;
+
+    top:14px;
+    left:18px;
+
+    padding:4px 8px;
+
+    border-radius:5px;
+
+    background:rgba(220,70,205,.1);
+
+    border:1px solid rgba(220,80,210,.3);
+
+    color:#df67d1;
+
+    font-size:8px;
+    font-weight:bold;
+
+    letter-spacing:2px;
+}
+
+/* =========================
+   STOPKA
+========================= */
+
+footer{
+    margin-top:40px;
+
+    color:#29384c;
+
+    font-size:9px;
+
+    letter-spacing:3px;
+
+    text-align:center;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:650px){
+
+    #menu{
+        padding:
+            35px 14px
+            25px;
+    }
+
+    .games{
+        grid-template-columns:1fr;
+
+        margin-top:35px;
+    }
+
+    .game-card{
+        min-height:125px;
+    }
+
+    .logo h1{
+        letter-spacing:5px;
+    }
+
+    .subtitle{
+        font-size:8px;
+        letter-spacing:3px;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="menu">
+
+```
+<!-- LOGO -->
+
+<div class="logo">
+
+    <h1>
+        NEON
+        <span>GAMES</span>
+    </h1>
+
+    <div class="subtitle">
+        WYBIERZ GRĘ
+    </div>
+
+</div>
+
+
+<!-- GRY -->
+
+<div class="games">
+
+    <!-- 01 -->
+
+    <div
+        class="game-card"
+        onclick="openGame('gravityrush.html')"
+    >
+
+        <div class="game-number">
+            01
+        </div>
+
+        <div class="game-icon">
+            ◈
+        </div>
+
+        <h2>
+            GRAVITY RUSH
+        </h2>
+
+        <p>
+            ZMIENIAJ GRAWITACJĘ • PRZETRWAJ
+        </p>
+
+    </div>
+
+
+    <!-- 02 -->
+
+    <div
+        class="game-card"
+        onclick="openGame('neonrun.html')"
+    >
+
+        <div class="game-number">
+            02
+        </div>
+
+        <div class="game-icon">
+            ✦
+        </div>
+
+        <h2>
+            NEON RUN
+        </h2>
+
+        <p>
+            UNIKAJ • ZBIERAJ • PRZETRWAJ
+        </p>
+
+    </div>
+
+
+    <!-- 03 -->
+
+    <div
+        class="game-card"
+        onclick="openGame('neonsniper.html')"
+    >
+
+        <div class="game-number">
+            03
+        </div>
+
+        <div class="game-icon">
+            ◎
+        </div>
+
+        <h2>
+            NEON SNIPER
+        </h2>
+
+        <p>
+            CELOWANIE • REFLEKS • PRECYZJA
+        </p>
+
+    </div>
+
+
+    <!-- 04 -->
+
+    <div
+        class="game-card"
+        onclick="openGame('odkryj.html')"
+    >
+
+        <div class="game-number">
+            04
+        </div>
+
+        <div class="game-icon">
+            ?
+        </div>
+
+        <h2>
+            ODKRYJ
+        </h2>
+
+        <p>
+            TAJEMNICA CZEKA
+        </p>
+
+    </div>
+
+
+    <!-- 05 -->
+
+    <div
+        class="game-card"
+        onclick="openGame('snake.html')"
+    >
+
+        <div class="game-number">
+            05
+        </div>
+
+        <div class="game-icon">
+            ◆
+        </div>
+
+        <h2>
+            SNAKE
+        </h2>
+
+        <p>
+            KLASYKA • JABŁKA • HIGH SCORE
+        </p>
+
+    </div>
+
+
+    <!-- 06 NOWA GRA -->
+
+    <div
+        class="game-card new"
+        onclick="openGame('rhythm.html')"
+    >
+
+        <div class="new-label">
+            NOWA GRA
+        </div>
+
+        <div
+            class="game-number"
+            style="top:15px"
+        >
+            06
+        </div>
+
+        <div class="game-icon">
+            ♪
+        </div>
+
+        <h2>
+            NEON RHYTHM
+        </h2>
+
+        <p>
+            RYTM • REFLEKS • MUZYKA
+        </p>
+
+    </div>
+
+</div>
+
+
+<footer>
+    NEON GAMES
+</footer>
+```
+
+</div>
+
+<script>
+
+function openGame(file){
+
+    window.location.href = file;
+
+}
+
+</script>
+
+</body>
+</html>

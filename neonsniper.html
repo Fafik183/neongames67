@@ -1,0 +1,1319 @@
+```html
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>NEON SNIPER</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    user-select:none;
+    -webkit-user-select:none;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#03050b;
+    font-family:Arial,sans-serif;
+}
+
+#game{
+    position:fixed;
+    inset:0;
+    overflow:hidden;
+    cursor:crosshair;
+    background:
+        radial-gradient(circle at 50% 50%,#17204b 0%,#080b1b 42%,#02030a 100%);
+}
+
+/* TŁO */
+
+.grid{
+    position:absolute;
+    inset:-20%;
+    opacity:.25;
+    background-image:
+        linear-gradient(rgba(0,220,255,.16) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(0,220,255,.16) 1px,transparent 1px);
+    background-size:60px 60px;
+    transform:perspective(500px) rotateX(60deg) translateY(100px) scale(1.4);
+    animation:gridMove 5s linear infinite;
+}
+
+@keyframes gridMove{
+    from{background-position:0 0,0 0}
+    to{background-position:0 300px,300px 0}
+}
+
+.orb{
+    position:absolute;
+    width:500px;
+    height:500px;
+    border-radius:50%;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle,rgba(0,220,255,.12),transparent 65%);
+    filter:blur(20px);
+}
+
+.star{
+    position:absolute;
+    width:2px;
+    height:2px;
+    border-radius:50%;
+    background:#fff;
+    box-shadow:0 0 8px #8cf6ff;
+}
+
+/* HUD */
+
+#hud{
+    position:absolute;
+    z-index:100;
+    top:0;
+    left:0;
+    right:0;
+    height:90px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 25px;
+    background:linear-gradient(rgba(0,0,0,.75),transparent);
+    pointer-events:none;
+}
+
+.stat{
+    text-align:center;
+    min-width:90px;
+}
+
+.label{
+    color:#68718f;
+    font-size:9px;
+    letter-spacing:3px;
+}
+
+.value{
+    margin-top:5px;
+    color:#6eefff;
+    font-size:24px;
+    font-weight:900;
+    text-shadow:0 0 12px #3de7ff;
+}
+
+#combo{
+    color:#ff5ce1;
+    text-shadow:0 0 12px #ff32d0;
+}
+
+#lives{
+    color:#ff5575;
+    text-shadow:0 0 12px #ff315d;
+}
+
+/* CELOWNIK */
+
+#crosshair{
+    position:absolute;
+    z-index:80;
+    width:50px;
+    height:50px;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+}
+
+#crosshair::before,
+#crosshair::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:50%;
+    background:#63f4ff;
+    box-shadow:0 0 8px #63f4ff;
+}
+
+#crosshair::before{
+    width:50px;
+    height:2px;
+    transform:translate(-50%,-50%);
+}
+
+#crosshair::after{
+    width:2px;
+    height:50px;
+    transform:translate(-50%,-50%);
+}
+
+.crossRing{
+    position:absolute;
+    inset:8px;
+    border:2px solid rgba(99,244,255,.9);
+    border-radius:50%;
+}
+
+.crossDot{
+    position:absolute;
+    width:5px;
+    height:5px;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:white;
+    box-shadow:0 0 8px white;
+}
+
+/* CELE */
+
+.target{
+    position:absolute;
+    z-index:40;
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    cursor:crosshair;
+}
+
+.target::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border:3px solid currentColor;
+    box-shadow:0 0 15px currentColor,0 0 35px currentColor;
+}
+
+.target::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:20px;
+    height:20px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:currentColor;
+    box-shadow:0 0 15px currentColor;
+}
+
+.target.normal{
+    color:#ff416c;
+}
+
+.target.fast{
+    color:#b66cff;
+    width:54px;
+    height:54px;
+}
+
+.target.gold{
+    color:#ffe45c;
+    width:48px;
+    height:48px;
+}
+
+.target.fake{
+    color:#35ff91;
+    width:64px;
+    height:64px;
+}
+
+.target.mini{
+    color:#5de7ff;
+    width:34px;
+    height:34px;
+}
+
+/* obracający się pierścień */
+
+.target .ring{
+    position:absolute;
+    inset:-9px;
+    border-radius:50%;
+    border:1px dashed currentColor;
+    animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+    to{transform:rotate(360deg)}
+}
+
+/* EFEKTY */
+
+.hit{
+    position:absolute;
+    z-index:70;
+    pointer-events:none;
+    width:10px;
+    height:10px;
+    border:3px solid white;
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    animation:hit .45s ease-out forwards;
+}
+
+@keyframes hit{
+    from{
+        width:10px;
+        height:10px;
+        opacity:1;
+    }
+    to{
+        width:100px;
+        height:100px;
+        opacity:0;
+    }
+}
+
+.particle{
+    position:absolute;
+    z-index:75;
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    pointer-events:none;
+}
+
+/* POPUP */
+
+.popup{
+    position:absolute;
+    z-index:90;
+    color:#fff;
+    font-size:25px;
+    font-weight:900;
+    pointer-events:none;
+    text-shadow:0 0 12px currentColor;
+    transform:translate(-50%,-50%);
+    animation:popup .8s ease-out forwards;
+}
+
+@keyframes popup{
+    from{
+        opacity:1;
+        transform:translate(-50%,-50%) scale(.8);
+    }
+    to{
+        opacity:0;
+        transform:translate(-50%,-130%) scale(1.3);
+    }
+}
+
+/* FLASH */
+
+#flash{
+    position:absolute;
+    inset:0;
+    z-index:200;
+    pointer-events:none;
+    background:white;
+    opacity:0;
+}
+
+/* LEVEL */
+
+#levelBanner{
+    position:absolute;
+    z-index:150;
+    left:50%;
+    top:45%;
+    transform:translate(-50%,-50%) scale(.5);
+    color:#fff;
+    font-size:clamp(45px,10vw,100px);
+    font-weight:900;
+    letter-spacing:8px;
+    text-shadow:0 0 20px #5eeeff,0 0 50px #ff4cdd;
+    opacity:0;
+    pointer-events:none;
+}
+
+#levelBanner.show{
+    animation:banner 1.3s ease forwards;
+}
+
+@keyframes banner{
+    0%{
+        opacity:0;
+        transform:translate(-50%,-50%) scale(.5);
+    }
+    25%{
+        opacity:1;
+        transform:translate(-50%,-50%) scale(1.1);
+    }
+    75%{
+        opacity:1;
+        transform:translate(-50%,-50%) scale(1);
+    }
+    100%{
+        opacity:0;
+        transform:translate(-50%,-50%) scale(1.3);
+    }
+}
+
+/* START / GAME OVER */
+
+.screen{
+    position:absolute;
+    inset:0;
+    z-index:300;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    background:radial-gradient(circle,rgba(20,25,65,.5),rgba(1,2,7,.97));
+}
+
+.screen h1{
+    color:#5eeeff;
+    font-size:clamp(50px,12vw,120px);
+    line-height:.8;
+    letter-spacing:8px;
+    text-shadow:0 0 20px #4eeaff,0 0 50px #6d3cff;
+}
+
+.screen h1 span{
+    display:block;
+    color:#ff55d6;
+    text-shadow:0 0 20px #ff38d1;
+}
+
+.screen p{
+    margin-top:30px;
+    color:#737c99;
+    font-size:11px;
+    letter-spacing:3px;
+}
+
+button{
+    margin-top:35px;
+    padding:16px 55px;
+    border:1px solid #62edff;
+    border-radius:8px;
+    color:#6cefff;
+    background:rgba(50,220,255,.06);
+    font-weight:bold;
+    letter-spacing:4px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:rgba(50,220,255,.18);
+    box-shadow:0 0 25px rgba(60,230,255,.4);
+}
+
+#gameOver{
+    display:none;
+}
+
+#gameOver h2{
+    color:#ff4772;
+    font-size:clamp(50px,11vw,100px);
+    text-shadow:0 0 20px #ff315d;
+}
+
+.final{
+    margin-top:20px;
+    color:#6e7895;
+    letter-spacing:4px;
+}
+
+#finalScore{
+    color:#6defff;
+    font-size:70px;
+    font-weight:900;
+    text-shadow:0 0 15px #48eaff;
+}
+
+#newRecord{
+    display:none;
+    margin-top:10px;
+    color:#ffe45c;
+    font-weight:bold;
+    letter-spacing:3px;
+}
+
+#help{
+    position:absolute;
+    bottom:18px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:100;
+    color:#59617a;
+    font-size:9px;
+    letter-spacing:3px;
+    white-space:nowrap;
+    pointer-events:none;
+}
+
+@media(max-width:600px){
+    #hud{
+        padding:10px;
+    }
+
+    .stat{
+        min-width:65px;
+    }
+
+    .value{
+        font-size:19px;
+    }
+
+    #help{
+        font-size:7px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div class="grid"></div>
+    <div class="orb"></div>
+
+    <div id="stars"></div>
+
+    <div id="hud">
+
+        <div class="stat">
+            <div class="label">WYNIK</div>
+            <div id="score" class="value">0</div>
+        </div>
+
+        <div class="stat">
+            <div class="label">COMBO</div>
+            <div id="combo" class="value">x0</div>
+        </div>
+
+        <div class="stat">
+            <div class="label">CZAS</div>
+            <div id="time" class="value">60</div>
+        </div>
+
+        <div class="stat">
+            <div class="label">ŻYCIA</div>
+            <div id="lives" class="value">♥♥♥</div>
+        </div>
+
+        <div class="stat">
+            <div class="label">BEST</div>
+            <div id="best" class="value">0</div>
+        </div>
+
+    </div>
+
+    <div id="crosshair">
+        <div class="crossRing"></div>
+        <div class="crossDot"></div>
+    </div>
+
+    <div id="levelBanner">LEVEL 1</div>
+
+    <div id="flash"></div>
+
+    <div id="help">
+        KLIKNIJ / DOTKNIJ CEL • CZERWONE + • ZIELONE = PUŁAPKA
+    </div>
+
+    <!-- START -->
+
+    <div id="start" class="screen">
+
+        <h1>
+            NEON
+            <span>SNIPER</span>
+        </h1>
+
+        <p>
+            TRAFIAJ • BUDUJ COMBO • NIE TRAĆ ŻYĆ
+        </p>
+
+        <button id="startBtn">
+            START
+        </button>
+
+        <p>
+            MYSZKA / DOTYK
+        </p>
+
+    </div>
+
+    <!-- GAME OVER -->
+
+    <div id="gameOver" class="screen">
+
+        <h2>KONIEC</h2>
+
+        <div class="final">
+            WYNIK
+        </div>
+
+        <div id="finalScore">
+            0
+        </div>
+
+        <div id="newRecord">
+            🏆 NOWY REKORD!
+        </div>
+
+        <button id="restartBtn">
+            JESZCZE RAZ
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+/* ==========================
+   ELEMENTY
+========================== */
+
+const game=document.getElementById("game");
+const scoreEl=document.getElementById("score");
+const comboEl=document.getElementById("combo");
+const timeEl=document.getElementById("time");
+const livesEl=document.getElementById("lives");
+const bestEl=document.getElementById("best");
+const crosshair=document.getElementById("crosshair");
+const startScreen=document.getElementById("start");
+const gameOver=document.getElementById("gameOver");
+const startBtn=document.getElementById("startBtn");
+const restartBtn=document.getElementById("restartBtn");
+const finalScore=document.getElementById("finalScore");
+const newRecord=document.getElementById("newRecord");
+const levelBanner=document.getElementById("levelBanner");
+const flash=document.getElementById("flash");
+const stars=document.getElementById("stars");
+
+
+/* ==========================
+   GWIAZDY
+========================== */
+
+for(let i=0;i<90;i++){
+
+    const s=document.createElement("div");
+
+    s.className="star";
+
+    s.style.left=Math.random()*100+"%";
+    s.style.top=Math.random()*100+"%";
+
+    s.style.opacity=.2+Math.random()*.8;
+
+    stars.appendChild(s);
+}
+
+
+/* ==========================
+   ZMIENNE
+========================== */
+
+let running=false;
+
+let score=0;
+
+let combo=0;
+
+let lives=3;
+
+let timeLeft=60;
+
+let level=1;
+
+let elapsed=0;
+
+let spawnTimer=0;
+
+let targets=[];
+
+let best=
+Number(localStorage.getItem("neonSniperBest"))||0;
+
+bestEl.textContent=best;
+
+let lastTime=0;
+
+
+/* ==========================
+   KURSOR
+========================== */
+
+function moveCrosshair(x,y){
+
+    crosshair.style.left=x+"px";
+    crosshair.style.top=y+"px";
+}
+
+document.addEventListener("pointermove",e=>{
+    moveCrosshair(e.clientX,e.clientY);
+});
+
+
+/* ==========================
+   START
+========================== */
+
+function startGame(){
+
+    running=true;
+
+    score=0;
+    combo=0;
+    lives=3;
+    timeLeft=60;
+    level=1;
+    elapsed=0;
+    spawnTimer=0;
+
+    targets.forEach(t=>t.el.remove());
+
+    targets=[];
+
+    startScreen.style.display="none";
+    gameOver.style.display="none";
+
+    updateHUD();
+
+    lastTime=performance.now();
+
+    requestAnimationFrame(loop);
+
+    showLevel();
+}
+
+
+/* ==========================
+   PĘTLA
+========================== */
+
+function loop(now){
+
+    if(!running)return;
+
+    let dt=(now-lastTime)/1000;
+
+    if(dt>.05)dt=.05;
+
+    lastTime=now;
+
+    elapsed+=dt;
+    timeLeft-=dt;
+
+    if(timeLeft<=0){
+
+        timeLeft=0;
+        endGame();
+        return;
+    }
+
+    update(dt);
+
+    requestAnimationFrame(loop);
+}
+
+
+/* ==========================
+   UPDATE
+========================== */
+
+function update(dt){
+
+    const newLevel=
+        Math.floor(elapsed/10)+1;
+
+    if(newLevel>level){
+
+        level=newLevel;
+
+        showLevel();
+    }
+
+    spawnTimer+=dt;
+
+    const spawnDelay=
+        Math.max(
+            .28,
+            .85-(level-1)*.055
+        );
+
+    if(spawnTimer>=spawnDelay){
+
+        spawnTarget();
+
+        spawnTimer=0;
+    }
+
+    moveTargets(dt);
+
+    updateHUD();
+}
+
+
+/* ==========================
+   TWORZENIE CELU
+========================== */
+
+function spawnTarget(){
+
+    const el=document.createElement("div");
+
+    let type;
+
+    const r=Math.random();
+
+    if(r<.08){
+        type="gold";
+    }
+    else if(r<.20){
+        type="fast";
+    }
+    else if(r<.31){
+        type="fake";
+    }
+    else if(r<.40){
+        type="mini";
+    }
+    else{
+        type="normal";
+    }
+
+    el.className="target "+type;
+
+    const ring=document.createElement("div");
+
+    ring.className="ring";
+
+    el.appendChild(ring);
+
+    const margin=70;
+
+    const x=
+        margin+
+        Math.random()*
+        (window.innerWidth-margin*2);
+
+    const y=
+        120+
+        Math.random()*
+        (window.innerHeight-180);
+
+    el.style.left=x+"px";
+    el.style.top=y+"px";
+
+    game.appendChild(el);
+
+    const target={
+
+        el:el,
+
+        x:x,
+
+        y:y,
+
+        type:type,
+
+        life:
+            type==="gold" ? 1.5 :
+            type==="fast" ? .75 :
+            type==="mini" ? .65 :
+            type==="fake" ? 1.4 :
+            1.15,
+
+        vx:
+            (Math.random()-.5)*
+            (50+level*12),
+
+        vy:
+            (Math.random()-.5)*
+            (50+level*12)
+
+    };
+
+    el.addEventListener(
+        "pointerdown",
+        e=>{
+
+            e.stopPropagation();
+
+            hitTarget(target);
+        }
+    );
+
+    targets.push(target);
+}
+
+
+/* ==========================
+   RUCH CELÓW
+========================== */
+
+function moveTargets(dt){
+
+    for(let i=targets.length-1;i>=0;i--){
+
+        const t=targets[i];
+
+        t.life-=dt;
+
+        t.x+=t.vx*dt;
+        t.y+=t.vy*dt;
+
+        const w=window.innerWidth;
+        const h=window.innerHeight;
+
+        if(t.x<35 || t.x>w-35)
+            t.vx*=-1;
+
+        if(t.y<110 || t.y>h-45)
+            t.vy*=-1;
+
+        t.el.style.left=t.x+"px";
+        t.el.style.top=t.y+"px";
+
+        if(t.life<=0){
+
+            /*
+              Jeśli zwykły cel zniknie,
+              tracisz combo.
+            */
+
+            if(
+                t.type==="normal" ||
+                t.type==="fast" ||
+                t.type==="mini"
+            ){
+
+                combo=0;
+            }
+
+            removeTarget(i);
+        }
+    }
+}
+
+
+/* ==========================
+   TRAFIENIE
+========================== */
+
+function hitTarget(t){
+
+    if(!running)return;
+
+    const index=targets.indexOf(t);
+
+    if(index===-1)return;
+
+    const x=t.x;
+    const y=t.y;
+
+
+    /* FAŁSZYWY CEL */
+
+    if(t.type==="fake"){
+
+        loseLife();
+
+        createHit(x,y,"#35ff91");
+
+        popup(
+            x,
+            y,
+            "PUŁAPKA!",
+            "#35ff91"
+        );
+
+        removeTarget(index);
+
+        return;
+    }
+
+
+    /* COMBO */
+
+    combo++;
+
+
+    let points=10;
+
+    let color="#ff416c";
+
+    if(t.type==="fast"){
+
+        points=25;
+        color="#b66cff";
+    }
+
+    if(t.type==="gold"){
+
+        points=100;
+        color="#ffe45c";
+    }
+
+    if(t.type==="mini"){
+
+        points=40;
+        color="#5de7ff";
+    }
+
+
+    points*=Math.max(1,combo);
+
+
+    score+=points;
+
+
+    createHit(x,y,color);
+
+    popup(
+        x,
+        y,
+        "+"+points,
+        color
+    );
+
+
+    /*
+      Mała szansa na dodatkowy bonus
+    */
+
+    if(Math.random()<.08){
+
+        score+=100;
+
+        popup(
+            x,
+            y-35,
+            "BONUS +100",
+            "#fff"
+        );
+    }
+
+
+    removeTarget(index);
+
+
+    /*
+      Krótki flash
+    */
+
+    flash.style.opacity=.08;
+
+    setTimeout(
+        ()=>flash.style.opacity=0,
+        50
+    );
+}
+
+
+/* ==========================
+   ŻYCIE
+========================== */
+
+function loseLife(){
+
+    lives--;
+
+    combo=0;
+
+    updateHUD();
+
+    flash.style.background="#ff174f";
+    flash.style.opacity=.18;
+
+    setTimeout(
+        ()=>{
+            flash.style.opacity=0;
+            flash.style.background="white";
+        },
+        120
+    );
+
+    if(lives<=0){
+
+        endGame();
+    }
+}
+
+
+/* ==========================
+   USUWANIE
+========================== */
+
+function removeTarget(index){
+
+    if(index<0)return;
+
+    const t=targets[index];
+
+    if(!t)return;
+
+    t.el.remove();
+
+    targets.splice(index,1);
+}
+
+
+/* ==========================
+   HIT EFFECT
+========================== */
+
+function createHit(x,y,color){
+
+    const h=document.createElement("div");
+
+    h.className="hit";
+
+    h.style.left=x+"px";
+    h.style.top=y+"px";
+
+    h.style.borderColor=color;
+
+    h.style.boxShadow=
+        "0 0 20px "+color;
+
+    game.appendChild(h);
+
+    setTimeout(
+        ()=>h.remove(),
+        500
+    );
+
+
+    for(let i=0;i<12;i++){
+
+        const p=document.createElement("div");
+
+        p.className="particle";
+
+        p.style.background=color;
+
+        p.style.boxShadow=
+            "0 0 8px "+color;
+
+        p.style.left=x+"px";
+        p.style.top=y+"px";
+
+        game.appendChild(p);
+
+        const angle=
+            Math.random()*Math.PI*2;
+
+        const distance=
+            25+Math.random()*65;
+
+        p.animate(
+            [
+                {
+                    transform:"translate(-50%,-50%)",
+                    opacity:1
+                },
+                {
+                    transform:
+                        `translate(
+                            ${Math.cos(angle)*distance}px,
+                            ${Math.sin(angle)*distance}px
+                        )`,
+                    opacity:0
+                }
+            ],
+            {
+                duration:450+Math.random()*300,
+                easing:"ease-out"
+            }
+        );
+
+        setTimeout(
+            ()=>p.remove(),
+            800
+        );
+    }
+}
+
+
+/* ==========================
+   POPUP
+========================== */
+
+function popup(x,y,text,color){
+
+    const p=document.createElement("div");
+
+    p.className="popup";
+
+    p.textContent=text;
+
+    p.style.left=x+"px";
+    p.style.top=y+"px";
+    p.style.color=color;
+
+    game.appendChild(p);
+
+    setTimeout(
+        ()=>p.remove(),
+        850
+    );
+}
+
+
+/* ==========================
+   LEVEL
+========================== */
+
+function showLevel(){
+
+    levelBanner.textContent=
+        "LEVEL "+level;
+
+    levelBanner.classList.remove("show");
+
+    void levelBanner.offsetWidth;
+
+    levelBanner.classList.add("show");
+}
+
+
+/* ==========================
+   HUD
+========================== */
+
+function updateHUD(){
+
+    scoreEl.textContent=
+        Math.floor(score);
+
+    comboEl.textContent=
+        "x"+combo;
+
+    timeEl.textContent=
+        Math.ceil(timeLeft);
+
+    livesEl.textContent=
+        "♥".repeat(Math.max(0,lives));
+
+    bestEl.textContent=best;
+}
+
+
+/* ==========================
+   GAME OVER
+========================== */
+
+function endGame(){
+
+    if(!running)return;
+
+    running=false;
+
+    targets.forEach(
+        t=>t.el.remove()
+    );
+
+    targets=[];
+
+    const final=Math.floor(score);
+
+    finalScore.textContent=final;
+
+    newRecord.style.display="none";
+
+    if(final>best){
+
+        best=final;
+
+        localStorage.setItem(
+            "neonSniperBest",
+            best
+        );
+
+        newRecord.style.display="block";
+    }
+
+    updateHUD();
+
+    gameOver.style.display="flex";
+}
+
+
+/* ==========================
+   KLIKNIĘCIE W PUSTE MIEJSCE
+========================== */
+
+game.addEventListener(
+    "pointerdown",
+    e=>{
+
+        if(!running)return;
+
+        if(e.target.classList.contains("target"))
+            return;
+
+        /*
+          Strzał w puste miejsce
+          zabiera combo.
+        */
+
+        combo=0;
+
+        createHit(
+            e.clientX,
+            e.clientY,
+            "#6a7188"
+        );
+
+        popup(
+            e.clientX,
+            e.clientY,
+            "PUSTY STRZAŁ",
+            "#777f98"
+        );
+
+        updateHUD();
+    }
+);
+
+
+/* ==========================
+   PRZYCISKI
+========================== */
+
+startBtn.addEventListener(
+    "click",
+    startGame
+);
+
+restartBtn.addEventListener(
+    "click",
+    startGame
+);
+
+
+/* ==========================
+   STARTOWE POŁOŻENIE
+========================== */
+
+moveCrosshair(
+    window.innerWidth/2,
+    window.innerHeight/2
+);
+
+updateHUD();
+
+</script>
+
+</body>
+</html>
+```

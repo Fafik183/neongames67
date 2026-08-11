@@ -1,0 +1,1789 @@
+```html
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>???</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    user-select:none;
+    -webkit-user-select:none;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#03030a;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    color:white;
+}
+
+#game{
+    position:fixed;
+    inset:0;
+    overflow:hidden;
+    background:
+        radial-gradient(circle at 50% 40%,#24154b,#080617 50%,#010106);
+}
+
+/* TŁO */
+
+#background{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+}
+
+.light{
+    position:absolute;
+    width:500px;
+    height:500px;
+    border-radius:50%;
+    filter:blur(80px);
+    opacity:.16;
+}
+
+.l1{
+    left:-150px;
+    top:10%;
+    background:#ff2bd6;
+}
+
+.l2{
+    right:-180px;
+    bottom:-100px;
+    background:#315cff;
+}
+
+.l3{
+    left:40%;
+    top:-200px;
+    background:#00eaff;
+}
+
+/* GWIAZDY */
+
+.star{
+    position:absolute;
+    width:2px;
+    height:2px;
+    background:white;
+    border-radius:50%;
+    opacity:.5;
+}
+
+/* HUD */
+
+#hud{
+    position:absolute;
+    z-index:100;
+    top:0;
+    left:0;
+    right:0;
+    height:80px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:12px 25px;
+
+    background:
+        linear-gradient(
+            rgba(0,0,0,.65),
+            transparent
+        );
+}
+
+.stat{
+    text-align:center;
+}
+
+.label{
+    font-size:8px;
+    letter-spacing:3px;
+    color:#716b87;
+}
+
+.value{
+    margin-top:5px;
+    font-size:20px;
+    font-weight:bold;
+    color:#fff;
+    text-shadow:0 0 10px #fff;
+}
+
+/* ARENA */
+
+#arena{
+    position:absolute;
+    left:50%;
+    top:50%;
+
+    width:min(1000px,94vw);
+    height:min(600px,78vh);
+
+    transform:translate(-50%,-50%);
+
+    border:2px solid rgba(255,255,255,.15);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.025),
+            rgba(255,255,255,.005)
+        );
+
+    box-shadow:
+        0 0 60px rgba(80,70,255,.12),
+        inset 0 0 60px rgba(255,255,255,.025);
+
+    overflow:hidden;
+}
+
+/* SIATKA */
+
+#arena::before{
+    content:"";
+    position:absolute;
+    inset:0;
+
+    background-image:
+        linear-gradient(
+            rgba(255,255,255,.035) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,.035) 1px,
+            transparent 1px
+        );
+
+    background-size:50px 50px;
+}
+
+/* GRACZ */
+
+#player{
+    position:absolute;
+    z-index:50;
+
+    width:32px;
+    height:32px;
+
+    border-radius:50%;
+
+    background:
+        radial-gradient(
+            circle at 35% 30%,
+            white,
+            #6df7ff 25%,
+            #6655ff 60%,
+            #281f72
+        );
+
+    box-shadow:
+        0 0 12px #72f5ff,
+        0 0 35px #6255ff;
+
+    transform:translate(-50%,-50%);
+}
+
+/* TRAIL */
+
+.trail{
+    position:absolute;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#6df7ff;
+    pointer-events:none;
+    opacity:.5;
+}
+
+/* OBIEKTY */
+
+.enemy{
+    position:absolute;
+    z-index:30;
+
+    width:35px;
+    height:35px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ff668c,
+            #6b1640
+        );
+
+    transform:rotate(45deg);
+
+    box-shadow:
+        0 0 15px #ff315f;
+}
+
+.enemy::after{
+    content:"";
+
+    position:absolute;
+
+    width:8px;
+    height:8px;
+
+    left:13px;
+    top:13px;
+
+    border-radius:50%;
+
+    background:#fff;
+
+    box-shadow:0 0 8px white;
+}
+
+.orb{
+    position:absolute;
+    z-index:25;
+
+    width:24px;
+    height:24px;
+
+    border-radius:50%;
+
+    background:
+        radial-gradient(
+            circle,
+            white,
+            #ffed63 20%,
+            #ff9f00 65%,
+            #9d4800
+        );
+
+    box-shadow:
+        0 0 12px #ffe45c,
+        0 0 30px #ff9d00;
+
+    animation:pulse .7s infinite alternate;
+}
+
+@keyframes pulse{
+    from{
+        transform:scale(.8);
+    }
+
+    to{
+        transform:scale(1.2);
+    }
+}
+
+/* ŚCIANA */
+
+.wall{
+    position:absolute;
+    z-index:20;
+
+    background:
+        linear-gradient(
+            135deg,
+            #251f58,
+            #11102e
+        );
+
+    border:2px solid #554bd1;
+
+    box-shadow:
+        0 0 12px rgba(100,80,255,.5);
+}
+
+/* BONUS */
+
+.power{
+    position:absolute;
+    z-index:27;
+
+    width:28px;
+    height:28px;
+
+    border-radius:7px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff,
+            #ff5df0
+        );
+
+    box-shadow:
+        0 0 15px #ff4ce5,
+        0 0 35px #a834ff;
+
+    animation:
+        rotatePower 2s linear infinite;
+}
+
+@keyframes rotatePower{
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+/* PORTAL */
+
+#portal{
+    position:absolute;
+    z-index:15;
+
+    width:65px;
+    height:65px;
+
+    border-radius:50%;
+
+    border:5px solid #68f7ff;
+
+    box-shadow:
+        0 0 15px #48efff,
+        0 0 50px #2c9dff,
+        inset 0 0 25px #48efff;
+
+    display:none;
+
+    animation:portal 1s infinite alternate;
+}
+
+@keyframes portal{
+    from{
+        transform:translate(-50%,-50%) scale(.85);
+    }
+
+    to{
+        transform:translate(-50%,-50%) scale(1.15);
+    }
+}
+
+/* START */
+
+#startScreen{
+    position:absolute;
+    z-index:500;
+
+    inset:0;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    background:
+        radial-gradient(
+            circle,
+            #221747,
+            #05040c 70%
+        );
+
+    text-align:center;
+}
+
+#startScreen h1{
+    font-size:clamp(55px,13vw,120px);
+    color:white;
+
+    text-shadow:
+        0 0 15px white,
+        0 0 50px #8d57ff;
+}
+
+#startScreen p{
+    margin-top:20px;
+    color:#77718d;
+    font-size:10px;
+    letter-spacing:5px;
+}
+
+#startButton{
+    margin-top:45px;
+
+    padding:17px 60px;
+
+    border:1px solid #fff;
+
+    color:white;
+
+    background:rgba(255,255,255,.05);
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    letter-spacing:4px;
+
+    transition:.2s;
+}
+
+#startButton:hover{
+    background:white;
+    color:#08060e;
+
+    box-shadow:
+        0 0 30px white;
+}
+
+/* KONIEC */
+
+#endScreen{
+    position:absolute;
+    z-index:600;
+
+    inset:0;
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    flex-direction:column;
+
+    text-align:center;
+
+    background:rgba(2,2,8,.9);
+}
+
+#endTitle{
+    font-size:clamp(45px,11vw,110px);
+
+    color:white;
+
+    text-shadow:
+        0 0 20px white,
+        0 0 50px #754dff;
+}
+
+#endText{
+    margin-top:15px;
+
+    color:#817b95;
+
+    letter-spacing:3px;
+}
+
+#retry{
+    margin-top:30px;
+
+    padding:14px 45px;
+
+    border:1px solid white;
+
+    color:white;
+
+    background:rgba(255,255,255,.05);
+
+    cursor:pointer;
+
+    border-radius:7px;
+}
+
+/* MOBILE */
+
+@media(max-width:600px){
+
+    #hud{
+        padding:10px;
+    }
+
+    .value{
+        font-size:16px;
+    }
+
+    .label{
+        font-size:7px;
+    }
+
+    #arena{
+        height:72vh;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div id="background">
+
+        <div class="light l1"></div>
+        <div class="light l2"></div>
+        <div class="light l3"></div>
+
+    </div>
+
+
+    <div id="hud">
+
+        <div class="stat">
+            <div class="label">WYNIK</div>
+            <div id="score" class="value">0</div>
+        </div>
+
+        <div class="stat">
+            <div class="label">CZAS</div>
+            <div id="time" class="value">0</div>
+        </div>
+
+        <div class="stat">
+            <div class="label">ŻYCIA</div>
+            <div id="lives" class="value">♥♥♥</div>
+        </div>
+
+        <div class="stat">
+            <div class="label">COMBO</div>
+            <div id="combo" class="value">x1</div>
+        </div>
+
+    </div>
+
+
+    <div id="arena">
+
+        <div id="player"></div>
+
+        <div id="portal"></div>
+
+    </div>
+
+
+    <div id="startScreen">
+
+        <h1>?</h1>
+
+        <p>
+            NIE WIESZ, CO CIĘ CZEKA
+        </p>
+
+        <button id="startButton">
+            START
+        </button>
+
+    </div>
+
+
+    <div id="endScreen">
+
+        <h2 id="endTitle">
+            KONIEC
+        </h2>
+
+        <div id="endText"></div>
+
+        <button id="retry">
+            SPRÓBUJ PONOWNIE
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   ELEMENTY
+========================= */
+
+const arena =
+document.getElementById("arena");
+
+const player =
+document.getElementById("player");
+
+const scoreText =
+document.getElementById("score");
+
+const timeText =
+document.getElementById("time");
+
+const livesText =
+document.getElementById("lives");
+
+const comboText =
+document.getElementById("combo");
+
+const startScreen =
+document.getElementById("startScreen");
+
+const startButton =
+document.getElementById("startButton");
+
+const endScreen =
+document.getElementById("endScreen");
+
+const endTitle =
+document.getElementById("endTitle");
+
+const endText =
+document.getElementById("endText");
+
+const retry =
+document.getElementById("retry");
+
+const portal =
+document.getElementById("portal");
+
+
+/* =========================
+   ZMIENNE
+========================= */
+
+let running=false;
+
+let x=100;
+let y=100;
+
+let vx=0;
+let vy=0;
+
+let acceleration=1.15;
+let friction=.84;
+let maxSpeed=8;
+
+let score=0;
+let combo=1;
+
+let lives=3;
+
+let time=0;
+
+let objects=[];
+
+let keys={};
+
+let last=0;
+
+let spawnTimer=0;
+
+let orbTimer=0;
+
+let difficulty=1;
+
+let targetScore=300;
+
+
+/* =========================
+   GWIAZDY
+========================= */
+
+for(let i=0;i<90;i++){
+
+    const s=
+        document.createElement("div");
+
+    s.className="star";
+
+    s.style.left=
+        Math.random()*100+"%";
+
+    s.style.top=
+        Math.random()*100+"%";
+
+    s.style.opacity=
+        .15+
+        Math.random()*.7;
+
+    document
+        .getElementById("background")
+        .appendChild(s);
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+startButton.onclick=
+()=>{
+    start();
+};
+
+retry.onclick=
+()=>{
+    start();
+};
+
+
+/* =========================
+   GRA
+========================= */
+
+function start(){
+
+    startScreen.style.display="none";
+
+    endScreen.style.display="none";
+
+    objects.forEach(
+        o=>o.el.remove()
+    );
+
+    objects=[];
+
+    running=true;
+
+    x=100;
+
+    y=
+        arena.clientHeight/2;
+
+    vx=0;
+
+    vy=0;
+
+    score=0;
+
+    combo=1;
+
+    lives=3;
+
+    time=0;
+
+    difficulty=1;
+
+    targetScore=300;
+
+    portal.style.display="none";
+
+    updateHUD();
+
+    last=
+        performance.now();
+
+    requestAnimationFrame(loop);
+
+}
+
+
+/* =========================
+   PĘTLA
+========================= */
+
+function loop(now){
+
+    if(!running)
+        return;
+
+    let dt=
+        (now-last)/16.67;
+
+    if(dt>2)
+        dt=2;
+
+    last=now;
+
+    time+=dt/60;
+
+    difficulty=
+        1+
+        time*.055;
+
+
+    update(dt);
+
+    spawn(dt);
+
+    checkCollisions();
+
+    updateObjects(dt);
+
+    updateHUD();
+
+    requestAnimationFrame(loop);
+
+}
+
+
+/* =========================
+   RUCH
+========================= */
+
+function update(dt){
+
+    let dx=0;
+    let dy=0;
+
+
+    if(
+        keys["ArrowLeft"] ||
+        keys["a"]
+    )
+        dx--;
+
+    if(
+        keys["ArrowRight"] ||
+        keys["d"]
+    )
+        dx++;
+
+    if(
+        keys["ArrowUp"] ||
+        keys["w"]
+    )
+        dy--;
+
+    if(
+        keys["ArrowDown"] ||
+        keys["s"]
+    )
+        dy++;
+
+
+    /*
+       Bardzo płynny ruch
+    */
+
+    vx+=dx*acceleration*dt;
+
+    vy+=dy*acceleration*dt;
+
+
+    vx*=Math.pow(
+        friction,
+        dt
+    );
+
+    vy*=Math.pow(
+        friction,
+        dt
+    );
+
+
+    const currentMax=
+        maxSpeed+
+        difficulty*.4;
+
+
+    vx=
+        Math.max(
+            -currentMax,
+            Math.min(currentMax,vx)
+        );
+
+    vy=
+        Math.max(
+            -currentMax,
+            Math.min(currentMax,vy)
+        );
+
+
+    x+=vx*dt;
+    y+=vy*dt;
+
+
+    const margin=18;
+
+
+    if(
+        x<margin
+    ){
+
+        x=margin;
+        vx*=-.5;
+
+    }
+
+    if(
+        x>
+        arena.clientWidth-margin
+    ){
+
+        x=
+            arena.clientWidth-margin;
+
+        vx*=-.5;
+
+    }
+
+    if(
+        y<margin
+    ){
+
+        y=margin;
+        vy*=-.5;
+
+    }
+
+    if(
+        y>
+        arena.clientHeight-margin
+    ){
+
+        y=
+            arena.clientHeight-margin;
+
+        vy*=-.5;
+
+    }
+
+
+    player.style.left=
+        x+"px";
+
+    player.style.top=
+        y+"px";
+
+
+    /*
+       ślad
+    */
+
+    if(
+        Math.random()<.25
+    ){
+
+        const trail=
+            document.createElement("div");
+
+        trail.className="trail";
+
+        trail.style.left=x+"px";
+        trail.style.top=y+"px";
+
+        arena.appendChild(trail);
+
+        trail.animate(
+            [
+                {
+                    transform:"translate(-50%,-50%) scale(1)",
+                    opacity:.5
+                },
+                {
+                    transform:"translate(-50%,-50%) scale(.1)",
+                    opacity:0
+                }
+            ],
+            {
+                duration:350
+            }
+        );
+
+        setTimeout(
+            ()=>trail.remove(),
+            400
+        );
+
+    }
+
+}
+
+
+/* =========================
+   SPAWN
+========================= */
+
+function spawn(dt){
+
+    spawnTimer-=dt;
+
+    orbTimer-=dt;
+
+
+    /*
+       przeszkody
+    */
+
+    if(spawnTimer<=0){
+
+        createEnemy();
+
+        spawnTimer=
+            Math.max(
+                12,
+                38-
+                difficulty*4
+            );
+
+    }
+
+
+    /*
+       punkty
+    */
+
+    if(orbTimer<=0){
+
+        createOrb();
+
+        orbTimer=
+            Math.max(
+                15,
+                45-
+                difficulty*3
+            );
+
+    }
+
+
+    /*
+       bonus
+    */
+
+    if(
+        Math.random()<
+        .0008*difficulty
+    ){
+
+        createPower();
+
+    }
+
+
+    /*
+       po odpowiednim wyniku
+       pojawia się portal
+    */
+
+    if(
+        score>=targetScore &&
+        portal.style.display!=="block"
+    ){
+
+        createPortal();
+
+    }
+
+}
+
+
+/* =========================
+   PRZESZKODA
+========================= */
+
+function createEnemy(){
+
+    const el=
+        document.createElement("div");
+
+    el.className="enemy";
+
+    const side=
+        Math.floor(
+            Math.random()*4
+        );
+
+    let ox;
+    let oy;
+    let ex;
+    let ey;
+
+
+    if(side===0){
+
+        ox=-30;
+        oy=
+            40+
+            Math.random()*
+            (arena.clientHeight-80);
+
+        ex=
+            arena.clientWidth+50;
+
+        ey=oy;
+
+    }
+    else if(side===1){
+
+        ox=
+            arena.clientWidth+30;
+
+        oy=
+            40+
+            Math.random()*
+            (arena.clientHeight-80);
+
+        ex=-50;
+        ey=oy;
+
+    }
+    else if(side===2){
+
+        ox=
+            40+
+            Math.random()*
+            (arena.clientWidth-80);
+
+        oy=-30;
+
+        ex=ox;
+
+        ey=
+            arena.clientHeight+50;
+
+    }
+    else{
+
+        ox=
+            40+
+            Math.random()*
+            (arena.clientWidth-80);
+
+        oy=
+            arena.clientHeight+30;
+
+        ex=ox;
+
+        ey=-50;
+
+    }
+
+
+    el.style.left=ox+"px";
+    el.style.top=oy+"px";
+
+    arena.appendChild(el);
+
+
+    const dx=ex-ox;
+    const dy=ey-oy;
+
+    const len=
+        Math.sqrt(dx*dx+dy*dy);
+
+
+    const speed=
+        (1.3+
+        Math.random()*.9)*
+        difficulty;
+
+
+    objects.push({
+
+        type:"enemy",
+
+        el:el,
+
+        x:ox,
+        y:oy,
+
+        vx:dx/len*speed,
+        vy:dy/len*speed,
+
+        size:35
+
+    });
+
+}
+
+
+/* =========================
+   PUNKT
+========================= */
+
+function createOrb(){
+
+    const el=
+        document.createElement("div");
+
+    el.className="orb";
+
+    const ox=
+        50+
+        Math.random()*
+        (arena.clientWidth-100);
+
+    const oy=
+        50+
+        Math.random()*
+        (arena.clientHeight-100);
+
+    el.style.left=
+        ox+"px";
+
+    el.style.top=
+        oy+"px";
+
+    arena.appendChild(el);
+
+
+    objects.push({
+
+        type:"orb",
+
+        el:el,
+
+        x:ox,
+        y:oy,
+
+        vx:0,
+        vy:0,
+
+        size:24
+
+    });
+
+}
+
+
+/* =========================
+   BONUS
+========================= */
+
+function createPower(){
+
+    const el=
+        document.createElement("div");
+
+    el.className="power";
+
+    const ox=
+        50+
+        Math.random()*
+        (arena.clientWidth-100);
+
+    const oy=
+        50+
+        Math.random()*
+        (arena.clientHeight-100);
+
+    el.style.left=
+        ox+"px";
+
+    el.style.top=
+        oy+"px";
+
+    arena.appendChild(el);
+
+
+    objects.push({
+
+        type:"power",
+
+        el:el,
+
+        x:ox,
+        y:oy,
+
+        vx:0,
+        vy:0,
+
+        size:28
+
+    });
+
+}
+
+
+/* =========================
+   PORTAL
+========================= */
+
+function createPortal(){
+
+    portal.style.display=
+        "block";
+
+    portal.style.left=
+        (arena.clientWidth-80)+"px";
+
+    portal.style.top=
+        (arena.clientHeight/2)+"px";
+
+}
+
+
+/* =========================
+   OBIEKTY
+========================= */
+
+function updateObjects(dt){
+
+    for(
+        let i=objects.length-1;
+        i>=0;
+        i--
+    ){
+
+        const o=
+            objects[i];
+
+
+        if(o.type==="enemy"){
+
+            o.x+=
+                o.vx*dt;
+
+            o.y+=
+                o.vy*dt;
+
+            o.el.style.left=
+                o.x+"px";
+
+            o.el.style.top=
+                o.y+"px";
+
+
+            if(
+                o.x<-100 ||
+                o.x>
+                arena.clientWidth+100 ||
+                o.y<-100 ||
+                o.y>
+                arena.clientHeight+100
+            ){
+
+                o.el.remove();
+
+                objects.splice(i,1);
+
+            }
+
+        }
+
+    }
+
+}
+
+
+/* =========================
+   KOLIZJE
+========================= */
+
+function checkCollisions(){
+
+    for(
+        let i=objects.length-1;
+        i>=0;
+        i--
+    ){
+
+        const o=
+            objects[i];
+
+
+        const distance=
+            Math.hypot(
+                x-o.x,
+                y-o.y
+            );
+
+
+        /*
+           wróg
+        */
+
+        if(
+            o.type==="enemy" &&
+            distance<
+            25+o.size/2
+        ){
+
+            hit();
+
+            o.el.remove();
+
+            objects.splice(i,1);
+
+            continue;
+
+        }
+
+
+        /*
+           punkt
+        */
+
+        if(
+            o.type==="orb" &&
+            distance<
+            25
+        ){
+
+            score+=
+                10*combo;
+
+            combo=
+                Math.min(
+                    20,
+                    combo+1
+                );
+
+            burst(
+                o.x,
+                o.y,
+                "#ffe45c"
+            );
+
+            o.el.remove();
+
+            objects.splice(i,1);
+
+            continue;
+
+        }
+
+
+        /*
+           bonus
+        */
+
+        if(
+            o.type==="power" &&
+            distance<
+            28
+        ){
+
+            score+=100;
+
+            combo+=2;
+
+            lives=
+                Math.min(
+                    5,
+                    lives+1
+                );
+
+            burst(
+                o.x,
+                o.y,
+                "#ff4eea"
+            );
+
+            o.el.remove();
+
+            objects.splice(i,1);
+
+            continue;
+
+        }
+
+    }
+
+
+    /*
+       portal
+    */
+
+    if(
+        portal.style.display==="block"
+    ){
+
+        const px=
+            arena.clientWidth-80;
+
+        const py=
+            arena.clientHeight/2;
+
+
+        if(
+            Math.hypot(
+                x-px,
+                y-py
+            )<55
+        ){
+
+            win();
+
+        }
+
+    }
+
+}
+
+
+/* =========================
+   TRAFIENIE
+========================= */
+
+function hit(){
+
+    lives--;
+
+    combo=1;
+
+    player.animate(
+        [
+            {
+                transform:
+                "translate(-50%,-50%) scale(1)"
+            },
+            {
+                transform:
+                "translate(-50%,-50%) scale(1.7)"
+            },
+            {
+                transform:
+                "translate(-50%,-50%) scale(1)"
+            }
+        ],
+        {
+            duration:350
+        }
+    );
+
+
+    if(lives<=0){
+
+        lose();
+
+    }
+
+}
+
+
+/* =========================
+   EFEKT
+========================= */
+
+function burst(x,y,color){
+
+    for(let i=0;i<14;i++){
+
+        const p=
+            document.createElement("div");
+
+        p.style.position="absolute";
+
+        p.style.width="5px";
+        p.style.height="5px";
+
+        p.style.borderRadius="50%";
+
+        p.style.background=color;
+
+        p.style.boxShadow=
+            "0 0 8px "+color;
+
+        p.style.left=x+"px";
+        p.style.top=y+"px";
+
+        arena.appendChild(p);
+
+
+        const angle=
+            Math.random()*Math.PI*2;
+
+        const dist=
+            20+
+            Math.random()*50;
+
+
+        p.animate(
+            [
+                {
+                    transform:
+                    "translate(-50%,-50%)",
+                    opacity:1
+                },
+                {
+                    transform:
+                    `translate(
+                        ${Math.cos(angle)*dist}px,
+                        ${Math.sin(angle)*dist}px
+                    )`,
+                    opacity:0
+                }
+            ],
+            {
+                duration:500
+            }
+        );
+
+
+        setTimeout(
+            ()=>p.remove(),
+            550
+        );
+
+    }
+
+}
+
+
+/* =========================
+   HUD
+========================= */
+
+function updateHUD(){
+
+    scoreText.textContent=
+        Math.floor(score);
+
+    timeText.textContent=
+        Math.floor(time);
+
+    livesText.textContent=
+        "♥".repeat(
+            Math.max(0,lives)
+        );
+
+    comboText.textContent=
+        "x"+combo;
+
+}
+
+
+/* =========================
+   WYGRANA
+========================= */
+
+function win(){
+
+    running=false;
+
+    endScreen.style.display=
+        "flex";
+
+    endTitle.textContent=
+        "BRAWO!";
+
+    endText.textContent=
+        "Wynik: "+
+        Math.floor(score)+
+        " • Czas: "+
+        Math.floor(time)+" s";
+
+    retry.textContent=
+        "JESZCZE RAZ";
+
+}
+
+
+/* =========================
+   PRZEGRANA
+========================= */
+
+function lose(){
+
+    running=false;
+
+    endScreen.style.display=
+        "flex";
+
+    endTitle.textContent=
+        "KONIEC";
+
+    endText.textContent=
+        "Wynik: "+
+        Math.floor(score);
+
+    retry.textContent=
+        "SPRÓBUJ PONOWNIE";
+
+}
+
+
+/* =========================
+   KLAWIATURA
+========================= */
+
+document.addEventListener(
+    "keydown",
+    e=>{
+
+        keys[e.key]=true;
+
+        if(
+            e.key===" "
+        ){
+
+            e.preventDefault();
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "keyup",
+    e=>{
+
+        keys[e.key]=false;
+
+    }
+);
+
+
+/* =========================
+   DOTYK
+========================= */
+
+let touch=null;
+
+arena.addEventListener(
+    "touchstart",
+    e=>{
+
+        const t=
+            e.touches[0];
+
+        touch={
+            x:t.clientX,
+            y:t.clientY
+        };
+
+    },
+    {passive:true}
+);
+
+
+arena.addEventListener(
+    "touchmove",
+    e=>{
+
+        if(!touch)
+            return;
+
+        const t=
+            e.touches[0];
+
+        const dx=
+            t.clientX-touch.x;
+
+        const dy=
+            t.clientY-touch.y;
+
+
+        keys["ArrowLeft"]=
+            dx<-12;
+
+        keys["ArrowRight"]=
+            dx>12;
+
+        keys["ArrowUp"]=
+            dy<-12;
+
+        keys["ArrowDown"]=
+            dy>12;
+
+    },
+    {passive:true}
+);
+
+
+arena.addEventListener(
+    "touchend",
+    ()=>{
+
+        touch=null;
+
+        keys["ArrowLeft"]=false;
+        keys["ArrowRight"]=false;
+        keys["ArrowUp"]=false;
+        keys["ArrowDown"]=false;
+
+    }
+);
+
+</script>
+
+</body>
+</html>
+```
